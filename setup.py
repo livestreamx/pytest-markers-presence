@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
 import codecs
+import os
 import re
 
 from setuptools import Command, setup

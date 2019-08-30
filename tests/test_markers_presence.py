@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+
 from pytest_markers_presence import EXIT_CODE_ERROR, EXIT_CODE_SUCCESS, STAGE_MARKERS
 
 
