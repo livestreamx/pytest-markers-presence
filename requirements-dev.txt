@@ -3,3 +3,4 @@ pytest
 allure-pytest
 tox
 wheel
+twine

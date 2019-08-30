@@ -45,7 +45,7 @@ class VersionCommand(Command):
 
 setup(
     name="pytest-markers-presence",
-    version="0.1.0",
+    version=version,
     author="Vladislav Mukhamatnurov",
     author_email="livestreamepidemz@yandex.ru",
     maintainer="Vladislav Mukhamatnurov",
@@ -63,7 +63,6 @@ setup(
         "Topic :: Software Development :: Testing",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: Implementation :: CPython",

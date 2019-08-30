@@ -12,7 +12,8 @@ test:
 	pytest
 
 test-release: clear
-	python setup.py sdist bdist_wheel upload -r pypitest
+	python setup.py sdist bdist_wheel
+	twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
 release: clear
 	git tag `python setup.py -q version`
