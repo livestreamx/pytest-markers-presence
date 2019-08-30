@@ -74,10 +74,10 @@ Example of 'pytest' run with provided options:
     (hidden for brevity)
 
     You should set BDD marker '@allure.feature' for your test class(es):
-    Test class name: 'TestClass', location: /path/to/file.py
+    Test class: 'TestClass', location: /path/to/file.py
 
     You should set BDD marker '@allure.story' for your test function(s):
-    Test case name: 'test_case', location: /path/to/file.py
+    Test function: 'test_case', location: /path/to/file.py
 
     ============== no tests ran in 0.00 seconds ===============
 

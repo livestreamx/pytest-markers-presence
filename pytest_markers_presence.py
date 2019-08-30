@@ -68,7 +68,7 @@ def get_function_name(func):
 def get_items(session):
     seen_classes = {None}
     seen_functions = {None}
-    for function in session.items:
+    for function in [item for item in session.items if hasattr(item, 'originalname')]:
         func_name = get_function_name(function)
         if func_name not in seen_functions:
             seen_functions.add(func_name)
@@ -100,13 +100,13 @@ def get_not_marked_items(session):
 
 def write_classes(tw, classes):
     for cls in classes:
-        tplt = "Test class name: '{}', location: {}"
+        tplt = "Test class: '{}', location: {}"
         tw.line(tplt.format(cls.name, cls.fspath))
 
 
 def write_functions(tw, functions):
     for function in functions:
-        tplt = "Test case name: '{}', location: {}"
+        tplt = "Test function: '{}', location: {}"
         tw.line(tplt.format(get_function_name(function), function.fspath))
 
 

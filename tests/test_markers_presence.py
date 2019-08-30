@@ -87,7 +87,7 @@ def test_stage_markers_only(testdir, option, tag, msg):
 
 
 @pytest.mark.parametrize("option", ["--bdd-markers"])
-@pytest.mark.parametrize("msg", ["Test case name: 'test_case'"])
+@pytest.mark.parametrize("msg", ["Test function: 'test_case'"])
 def test_bdd_markers_feature_only(testdir, option, msg):
     testdir.makepyfile(
         """
@@ -105,7 +105,7 @@ def test_bdd_markers_feature_only(testdir, option, msg):
 
 
 @pytest.mark.parametrize("option", ["--bdd-markers"])
-@pytest.mark.parametrize("msg", ["Test class name: 'TestClass'"])
+@pytest.mark.parametrize("msg", ["Test class: 'TestClass'"])
 def test_bdd_markers_story_only(testdir, option, msg):
     testdir.makepyfile(
         """
@@ -179,6 +179,28 @@ def test_fixture_not_affected(testdir, options):
             return True
         """
     )
+    result = testdir.runpytest(*options)
+    result.stdout.fnmatch_lines(
+        [
+            "*Cool, every test class is staged*",
+            "*Cool, every test class with its functions is marked with BDD tags*",
+            "*no tests ran in *",
+        ]
+    )
+    assert result.ret == EXIT_CODE_SUCCESS
+
+
+@pytest.mark.parametrize("options", [("--stage-markers", "--bdd-markers")])
+def test_yml_not_affected(testdir, options):
+    testdir.makefile(
+        ".yml",
+        """
+        test_name: name
+        stages:
+          - name: test
+        """
+    )
+
     result = testdir.runpytest(*options)
     result.stdout.fnmatch_lines(
         [
