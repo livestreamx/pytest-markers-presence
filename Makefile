@@ -18,7 +18,8 @@ test-release: clear
 release: clear
 	git tag `python setup.py -q version`
 	git push origin `python setup.py -q version`
-	python setup.py sdist bdist_wheel upload -r pypi
+	python setup.py sdist bdist_wheel
+	twine upload dist/*
 
 setup:
 	pip install -U -r requirements-dev.txt
