@@ -3,44 +3,53 @@ import pytest
 from pytest_markers_presence import EXIT_CODE_ERROR, EXIT_CODE_SUCCESS, STAGE_MARKERS
 
 
-@pytest.mark.parametrize(('option', 'msg'), [('--stage-markers', 'Cool, every test class is staged'), (
-        '--bdd-markers', 'Cool, every test class with its functions is marked with BDD tags')])
+@pytest.mark.parametrize(
+    ("option", "msg"),
+    [
+        ("--stage-markers", "Cool, every test class is staged"),
+        ("--bdd-markers", "Cool, every test class with its functions is marked with BDD tags"),
+    ],
+)
 def test_markers(testdir, option, msg):
     """Make sure that pytest accepts our fixtures."""
 
     # create a temporary pytest test module
-    testdir.makepyfile("""
+    testdir.makepyfile(
+        """
         assert True
-    """)
+    """
+    )
 
     # run pytest with the following cmd args
-    result = testdir.runpytest(option, '-v')
+    result = testdir.runpytest(option, "-v")
 
     # fnmatch_lines does an assertion internally
-    result.stdout.fnmatch_lines([
-        '*{}.'.format(msg),
-        '*no tests ran in *'
-    ])
+    result.stdout.fnmatch_lines(["*{}.".format(msg), "*no tests ran in *"])
 
     # make sure that that we get a '0' exit code for the testsuite
     assert result.ret == EXIT_CODE_SUCCESS
 
 
 def test_help_message(testdir):
-    result = testdir.runpytest(
-        '--help',
-    )
+    result = testdir.runpytest("--help")
     # fnmatch_lines does an assertion internally
-    result.stdout.fnmatch_lines([
-        'markers-presence:*',
-        '*--stage-markers*Show not staged classes',
-        '*--bdd-markers*Show items without allure BDD markers'
-    ])
+    result.stdout.fnmatch_lines(
+        [
+            "markers-presence:*",
+            "*--stage-markers*Show not staged classes",
+            "*--bdd-markers*Show items without allure BDD markers",
+        ]
+    )
 
 
-@pytest.mark.parametrize(('option', 'msg'), [('--stage-markers', 'You should set stage marker'), (
-        '--bdd-markers', 'You should set BDD marker \'@allure.feature\''),
-                                             ('--bdd-markers', 'You should set BDD marker \'@allure.story\'')])
+@pytest.mark.parametrize(
+    ("option", "msg"),
+    [
+        ("--stage-markers", "You should set stage marker"),
+        ("--bdd-markers", "You should set BDD marker '@allure.feature'"),
+        ("--bdd-markers", "You should set BDD marker '@allure.story'"),
+    ],
+)
 def test_markers_in_work(testdir, option, msg):
     """Make sure that pytest fails session with our fixtures."""
 
@@ -52,16 +61,13 @@ def test_markers_in_work(testdir, option, msg):
         """
     )
     result = testdir.runpytest(option)
-    result.stdout.fnmatch_lines([
-        '*{}*'.format(msg),
-        '*no tests ran in *'
-    ])
+    result.stdout.fnmatch_lines(["*{}*".format(msg), "*no tests ran in *"])
     assert result.ret == EXIT_CODE_ERROR
 
 
-@pytest.mark.parametrize('option', ['--stage-markers'])
-@pytest.mark.parametrize('tag', STAGE_MARKERS)
-@pytest.mark.parametrize('msg', ['Cool, every test class is staged.'])
+@pytest.mark.parametrize("option", ["--stage-markers"])
+@pytest.mark.parametrize("tag", STAGE_MARKERS)
+@pytest.mark.parametrize("msg", ["Cool, every test class is staged."])
 def test_stage_markers_only(testdir, option, tag, msg):
     testdir.makepyfile(
         """
@@ -70,18 +76,17 @@ def test_stage_markers_only(testdir, option, tag, msg):
         class TestClass:
             def test_case(self):
                 assert True
-        """.format(tag)
+        """.format(
+            tag
+        )
     )
     result = testdir.runpytest(option)
-    result.stdout.fnmatch_lines([
-        '*{}*'.format(msg),
-        '*no tests ran in *'
-    ])
+    result.stdout.fnmatch_lines(["*{}*".format(msg), "*no tests ran in *"])
     assert result.ret == EXIT_CODE_SUCCESS
 
 
-@pytest.mark.parametrize('option', ['--bdd-markers'])
-@pytest.mark.parametrize('msg', ['Test case name: \'test_case\''])
+@pytest.mark.parametrize("option", ["--bdd-markers"])
+@pytest.mark.parametrize("msg", ["Test case name: 'test_case'"])
 def test_bdd_markers_feature_only(testdir, option, msg):
     testdir.makepyfile(
         """
@@ -94,15 +99,12 @@ def test_bdd_markers_feature_only(testdir, option, msg):
         """
     )
     result = testdir.runpytest(option)
-    result.stdout.fnmatch_lines([
-        '*{}*'.format(msg),
-        '*no tests ran in *'
-    ])
+    result.stdout.fnmatch_lines(["*{}*".format(msg), "*no tests ran in *"])
     assert result.ret == EXIT_CODE_ERROR
 
 
-@pytest.mark.parametrize('option', ['--bdd-markers'])
-@pytest.mark.parametrize('msg', ['Test class name: \'TestClass\''])
+@pytest.mark.parametrize("option", ["--bdd-markers"])
+@pytest.mark.parametrize("msg", ["Test class name: 'TestClass'"])
 def test_bdd_markers_story_only(testdir, option, msg):
     testdir.makepyfile(
         """
@@ -115,15 +117,12 @@ def test_bdd_markers_story_only(testdir, option, msg):
         """
     )
     result = testdir.runpytest(option)
-    result.stdout.fnmatch_lines([
-        '*{}*'.format(msg),
-        '*no tests ran in *'
-    ])
+    result.stdout.fnmatch_lines(["*{}*".format(msg), "*no tests ran in *"])
     assert result.ret == EXIT_CODE_ERROR
 
 
-@pytest.mark.parametrize('option', ['--bdd-markers'])
-@pytest.mark.parametrize('msg', ['Cool, every test class with its functions is marked with BDD tags'])
+@pytest.mark.parametrize("option", ["--bdd-markers"])
+@pytest.mark.parametrize("msg", ["Cool, every test class with its functions is marked with BDD tags"])
 def test_bdd_markers_only(testdir, option, msg):
     testdir.makepyfile(
         """
@@ -137,15 +136,12 @@ def test_bdd_markers_only(testdir, option, msg):
         """
     )
     result = testdir.runpytest(option)
-    result.stdout.fnmatch_lines([
-        '*{}*'.format(msg),
-        '*no tests ran in *'
-    ])
+    result.stdout.fnmatch_lines(["*{}*".format(msg), "*no tests ran in *"])
     assert result.ret == EXIT_CODE_SUCCESS
 
 
-@pytest.mark.parametrize('options', [('--stage-markers', '--bdd-markers')])
-@pytest.mark.parametrize('tag', STAGE_MARKERS)
+@pytest.mark.parametrize("options", [("--stage-markers", "--bdd-markers")])
+@pytest.mark.parametrize("tag", STAGE_MARKERS)
 def test_all_markers_together(testdir, options, tag):
     testdir.makepyfile(
         """
@@ -157,18 +153,22 @@ def test_all_markers_together(testdir, options, tag):
             @allure.story("story")
             def test_case(self):
                 assert True
-        """.format(tag)
+        """.format(
+            tag
+        )
     )
     result = testdir.runpytest(*options)
-    result.stdout.fnmatch_lines([
-        '*Cool, every test class is staged*',
-        '*Cool, every test class with its functions is marked with BDD tags*',
-        '*no tests ran in *'
-    ])
+    result.stdout.fnmatch_lines(
+        [
+            "*Cool, every test class is staged*",
+            "*Cool, every test class with its functions is marked with BDD tags*",
+            "*no tests ran in *",
+        ]
+    )
     assert result.ret == EXIT_CODE_SUCCESS
 
 
-@pytest.mark.parametrize('options', [('--stage-markers', '--bdd-markers')])
+@pytest.mark.parametrize("options", [("--stage-markers", "--bdd-markers")])
 def test_fixture_not_affected(testdir, options):
     testdir.makepyfile(
         """
@@ -179,9 +179,11 @@ def test_fixture_not_affected(testdir, options):
         """
     )
     result = testdir.runpytest(*options)
-    result.stdout.fnmatch_lines([
-        '*Cool, every test class is staged*',
-        '*Cool, every test class with its functions is marked with BDD tags*',
-        '*no tests ran in *'
-    ])
+    result.stdout.fnmatch_lines(
+        [
+            "*Cool, every test class is staged*",
+            "*Cool, every test class with its functions is marked with BDD tags*",
+            "*no tests ran in *",
+        ]
+    )
     assert result.ret == EXIT_CODE_SUCCESS

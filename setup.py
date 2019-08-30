@@ -12,7 +12,7 @@ BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 
 def read(fname):
     file_path = os.path.join(os.path.dirname(__file__), fname)
-    return codecs.open(file_path, encoding='utf-8').read()
+    return codecs.open(file_path, encoding="utf-8").read()
 
 
 def get_version():
@@ -44,37 +44,33 @@ class VersionCommand(Command):
 
 
 setup(
-    name='pytest-markers-presence',
-    version='0.1.0',
-    author='Vladislav Mukhamatnurov',
-    author_email='livestreamepidemz@yandex.ru',
-    maintainer='Vladislav Mukhamatnurov',
-    maintainer_email='livestreamepidemz@yandex.ru',
-    license='MIT',
-    url='https://github.com/livestreamx/pytest-markers-presence',
+    name="pytest-markers-presence",
+    version="0.1.0",
+    author="Vladislav Mukhamatnurov",
+    author_email="livestreamepidemz@yandex.ru",
+    maintainer="Vladislav Mukhamatnurov",
+    maintainer_email="livestreamepidemz@yandex.ru",
+    license="MIT",
+    url="https://github.com/livestreamx/pytest-markers-presence",
     description='A simple plugin to detect missed pytest tags and markers"',
-    long_description=read('README.rst'),
-    py_modules=['pytest_markers_presence'],
-    install_requires=['pytest>=3.5.0'],
+    long_description=read("README.rst"),
+    py_modules=["pytest_markers_presence"],
+    install_requires=["pytest>=3.5.0"],
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Framework :: Pytest',
-        'Intended Audience :: Developers',
-        'Topic :: Software Development :: Testing',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Operating System :: OS Independent',
-        'License :: OSI Approved :: MIT License',
+        "Development Status :: 4 - Beta",
+        "Framework :: Pytest",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Testing",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
+        "Operating System :: OS Independent",
+        "License :: OSI Approved :: MIT License",
     ],
     cmdclass={"version": VersionCommand},
-    entry_points={
-        'pytest11': [
-            'markers-presence = pytest_markers_presence',
-        ],
-    },
+    entry_points={"pytest11": ["markers-presence = pytest_markers_presence"]},
 )

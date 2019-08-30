@@ -3,8 +3,7 @@ clear:
 	rm -rf *.egg-info
 
 format:
-	black .
-
+	black --target-version=py37 --skip-string-normalization --line-length=120 .
 lint:
 	pre-commit run -a -v
 
