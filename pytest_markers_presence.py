@@ -59,12 +59,19 @@ def detect_function_without_story(func, lst):
         lst.append(func)
 
 
+def get_function_name(func):
+    if func.originalname:
+        return func.originalname
+    return func.name
+
+
 def get_items(session):
     seen_classes = {None}
     seen_functions = {None}
     for function in session.items:
-        if function.originalname not in seen_functions:
-            seen_functions.add(function.originalname)
+        func_name = get_function_name(function)
+        if func_name not in seen_functions:
+            seen_functions.add(func_name)
             cls = function.getparent(_pytest.python.Class)
             if cls not in seen_classes:
                 seen_classes.add(cls)
@@ -100,7 +107,7 @@ def write_classes(tw, classes):
 def write_functions(tw, functions):
     for function in functions:
         tplt = "Test case name: '{}', location: {}"
-        tw.line(tplt.format(function.originalname, function.fspath))
+        tw.line(tplt.format(get_function_name(function), function.fspath))
 
 
 def is_checking_failed(config, session):
