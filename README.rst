@@ -18,7 +18,7 @@ pytest-markers-presence
     :target: https://ci.appveyor.com/project/livestreamx/pytest-markers-presence/branch/master
     :alt: See Build Status on AppVeyor
 
-A simple plugin to detect missed pytest tags and markers"
+A simple plugin to detect missed pytest tags and markers
 
 ----
 
@@ -28,13 +28,8 @@ This `pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`
 Features
 --------
 
-* TODO
-
-
-Requirements
-------------
-
-* TODO
+* List not staged test classes
+* List missed Allure BDD tags for test classes and functions (exclude fixtures)
 
 
 Installation
@@ -48,7 +43,40 @@ You can install "pytest-markers-presence" via `pip`_ from `PyPI`_::
 Usage
 -----
 
-* TODO
+The `--stage-markers` and other provided options will not run your tests and it's also sensible for errors in the pytest
+ collection step. If you are using as part of you CI process the recommended way is to run it after the default test
+ run. For example::
+
+    script:
+      - pytest
+      - pytest --stage-markers
+      - pytest --bdd-markers
+      - pytest --stage-markers --bdd-
+
+
+Example of 'pytest --stage-markers' run:
+
+    $ pytest --stage-markers
+    ============================================= test session starts ==========================================
+    (hidden for brevity)
+
+    You should set stage marker with '@pytest.mark' ('unit', 'integration' or 'system') for your test class(es):
+    Test class name: 'TestClass', location: /path/to/file.py
+
+    ======================================= no tests ran in 0.00 seconds =======================================
+
+    $ pytest --bdd-markers
+    ============================================= test session starts ==========================================
+    (hidden for brevity)
+
+    You should set BDD marker '@allure.feature' for your test class(es):
+    Test class name: 'TestClass', location: /path/to/file.py
+
+    You should set BDD marker '@allure.story' for your test function(s):
+    Test case name: 'test_case', location: /path/to/file.py
+
+    ======================================= no tests ran in 0.00 seconds =======================================
+
 
 Contributing
 ------------

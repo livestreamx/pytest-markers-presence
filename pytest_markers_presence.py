@@ -134,6 +134,7 @@ def is_checking_failed(config, session):
             tw.line(NO_FEATURE_CLASSES_HEADLINE, red=True)
             write_classes(tw, no_feature_classes)
             failed = True
+            tw.line()
         if no_story_functions:
             tw.line(NO_STORY_FUNCTIONS_HEADLINE, red=True)
             write_functions(tw, no_story_functions)

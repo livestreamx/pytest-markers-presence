@@ -166,3 +166,22 @@ def test_all_markers_together(testdir, options, tag):
         '*no tests ran in *'
     ])
     assert result.ret == EXIT_CODE_SUCCESS
+
+
+@pytest.mark.parametrize('options', [('--stage-markers', '--bdd-markers')])
+def test_fixture_not_affected(testdir, options):
+    testdir.makepyfile(
+        """
+        import pytest
+        @pytest.fixture()
+        def fixture_def():
+            return True
+        """
+    )
+    result = testdir.runpytest(*options)
+    result.stdout.fnmatch_lines([
+        '*Cool, every test class is staged*',
+        '*Cool, every test class with its functions is marked with BDD tags*',
+        '*no tests ran in *'
+    ])
+    assert result.ret == EXIT_CODE_SUCCESS

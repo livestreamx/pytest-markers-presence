@@ -1,4 +1,6 @@
 include LICENSE
+include AUTHORS.rst
+include CHANGES.rst
 include README.rst
 
 recursive-exclude * __pycache__
