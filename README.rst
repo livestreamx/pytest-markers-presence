@@ -51,7 +51,7 @@ The `--stage-markers` and other provided options will not run your tests and it'
       - pytest
       - pytest --stage-markers
       - pytest --bdd-markers
-      - pytest --stage-markers --bdd-
+      - pytest --stage-markers --bdd-markers
 
 
 Example of 'pytest' run with provided options:
