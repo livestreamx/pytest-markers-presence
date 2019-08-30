@@ -3,7 +3,7 @@ import _pytest.config
 import _pytest.python
 from _pytest.main import wrap_session
 
-EXIT_CODE_ERROR = 13
+EXIT_CODE_ERROR = 11
 EXIT_CODE_SUCCESS = 0
 
 STAGE_MARKERS = ["unit", "integration", "system"]
