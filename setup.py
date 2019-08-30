@@ -55,7 +55,7 @@ setup(
     description='A simple plugin to detect missed pytest tags and markers"',
     long_description=read("README.rst"),
     py_modules=["pytest_markers_presence"],
-    python_requires=">=3.0.0",
+    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
     install_requires=["pytest>=3.5.0", "allure-pytest>=2.7"],
     classifiers=[
         "Development Status :: 4 - Beta",
