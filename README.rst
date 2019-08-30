@@ -54,19 +54,21 @@ The `--stage-markers` and other provided options will not run your tests and it'
       - pytest --stage-markers --bdd-
 
 
-Example of 'pytest --stage-markers' run:
+Example of 'pytest' run with provided options:
 
     $ pytest --stage-markers
-    ============================================= test session starts ==========================================
+
+    =================== test session starts ===================
     (hidden for brevity)
 
     You should set stage marker with '@pytest.mark' ('unit', 'integration' or 'system') for your test class(es):
     Test class name: 'TestClass', location: /path/to/file.py
 
-    ======================================= no tests ran in 0.00 seconds =======================================
+    ============== no tests ran in 0.00 seconds ===============
 
     $ pytest --bdd-markers
-    ============================================= test session starts ==========================================
+
+    =================== test session starts ===================
     (hidden for brevity)
 
     You should set BDD marker '@allure.feature' for your test class(es):
@@ -75,7 +77,7 @@ Example of 'pytest --stage-markers' run:
     You should set BDD marker '@allure.story' for your test function(s):
     Test case name: 'test_case', location: /path/to/file.py
 
-    ======================================= no tests ran in 0.00 seconds =======================================
+    ============== no tests ran in 0.00 seconds ===============
 
 
 Contributing
