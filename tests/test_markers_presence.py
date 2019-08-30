@@ -198,7 +198,7 @@ def test_yml_not_affected(testdir, options):
         test_name: name
         stages:
           - name: test
-        """
+        """,
     )
 
     result = testdir.runpytest(*options)
