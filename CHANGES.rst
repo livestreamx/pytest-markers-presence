@@ -1,6 +1,13 @@
 Changelog
 ---------
 
+0.3.0
+~~~~~
+
+* Updated documentation
+* Updated dev-requirements
+* Minor fixes
+
 0.2.0
 ~~~~~
 
