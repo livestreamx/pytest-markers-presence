@@ -4,3 +4,4 @@ allure-pytest
 tox
 wheel
 twine
+black

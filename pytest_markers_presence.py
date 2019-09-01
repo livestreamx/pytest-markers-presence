@@ -2,6 +2,7 @@
 import _pytest.config
 import _pytest.python
 from _pytest.main import wrap_session
+import py
 
 EXIT_CODE_ERROR = 11
 EXIT_CODE_SUCCESS = 0
@@ -17,6 +18,8 @@ NO_FEATURE_CLASSES_HEADLINE = "You should set BDD marker '@allure.feature' for y
 NO_STORY_FUNCTIONS_HEADLINE = "You should set BDD marker '@allure.story' for your test function(s):"
 BDD_MARKED_OK_HEADLINE = "Cool, every test class with its functions is marked with BDD tags."
 
+CURDIR = py.path.local()
+
 
 def pytest_addoption(parser):
     group = parser.getgroup("markers-presence")
@@ -28,7 +31,7 @@ def pytest_addoption(parser):
         action="store_true",
         dest="bdd_markers",
         default=False,
-        help="Show items without allure BDD markers",
+        help="Show items without Allure BDD markers",
     )
 
 
@@ -44,31 +47,46 @@ def _is_checking_failed(config):
     return wrap_session(config, is_checking_failed)
 
 
-def detect_not_staged_class(cls, lst):
+def include_if_class_not_staged(cls, lst):
     if not hasattr(cls, "own_markers") or not [m for m in cls.own_markers if m.name in STAGE_MARKERS]:
         lst.append(cls)
 
 
-def detect_class_without_feature(cls, lst):
+def include_if_class_without_feature(cls, lst):
     if not [m for m in cls.own_markers if m.name == "allure_label" and m.kwargs.get("label_type") == "feature"]:
         lst.append(cls)
 
 
-def detect_function_without_story(func, lst):
+def include_if_function_without_story(func, lst):
     if not [m for m in func.own_markers if m.name == "allure_label" and m.kwargs.get("label_type") == "story"]:
         lst.append(func)
 
 
 def get_function_name(func):
+    """
+    No need to show function name with specified parameter for user.
+    If the function was parametrized, it contains 'originalname' attribute.
+    If the function was not parametrized, it has simple name.
+    Plugin shows only simple name for fast debug and trouble shooting.
+    """
     if func.originalname:
         return func.originalname
     return func.name
 
 
+def get_valid_session_items(session):
+    """
+    Function that return only session items with attribute 'originalname'.
+    It is necessary in case of different pytest plugins those provide incompatible
+    logical constructions, for example Tavern framework.
+    """
+    return [item for item in session.items if hasattr(item, 'originalname')]
+
+
 def get_items(session):
     seen_classes = {None}
     seen_functions = {None}
-    for function in [item for item in session.items if hasattr(item, 'originalname')]:
+    for function in get_valid_session_items(session):
         func_name = get_function_name(function)
         if func_name not in seen_functions:
             seen_functions.add(func_name)
@@ -84,7 +102,7 @@ def get_not_staged_classes(session):
     not_staged_classes = []
     for cls, _ in get_items(session):
         if cls:
-            detect_not_staged_class(cls, not_staged_classes)
+            include_if_class_not_staged(cls, not_staged_classes)
     return not_staged_classes
 
 
@@ -93,21 +111,21 @@ def get_not_marked_items(session):
     no_story_functions = []
     for cls, func in get_items(session):
         if cls:
-            detect_class_without_feature(cls, no_feature_classes)
-        detect_function_without_story(func, no_story_functions)
+            include_if_class_without_feature(cls, no_feature_classes)
+        include_if_function_without_story(func, no_story_functions)
     return no_feature_classes, no_story_functions
 
 
 def write_classes(tw, classes):
     for cls in classes:
         tplt = "Test class: '{}', location: {}"
-        tw.line(tplt.format(cls.name, cls.fspath))
+        tw.line(tplt.format(cls.name, CURDIR.bestrelpath(cls.fspath)))
 
 
 def write_functions(tw, functions):
     for function in functions:
         tplt = "Test function: '{}', location: {}"
-        tw.line(tplt.format(get_function_name(function), function.fspath))
+        tw.line(tplt.format(get_function_name(function), CURDIR.bestrelpath(function.fspath)))
 
 
 def is_checking_failed(config, session):

@@ -18,7 +18,7 @@ def test_markers(testdir, option, msg):
     testdir.makepyfile(
         """
         assert True
-    """
+        """
     )
 
     # run pytest with the following cmd args
@@ -38,7 +38,7 @@ def test_help_message(testdir):
         [
             "markers-presence:*",
             "*--stage-markers*Show not staged classes",
-            "*--bdd-markers*Show items without allure BDD markers",
+            "*--bdd-markers*Show items without Allure BDD markers",
         ]
     )
 
