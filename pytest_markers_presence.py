@@ -7,15 +7,14 @@ import py
 EXIT_CODE_ERROR = 11
 EXIT_CODE_SUCCESS = 0
 
-STAGE_MARKERS = ["unit", "integration", "system"]
+STAGE_TAGS = ["unit", "integration", "api", "system", "ui"]
 
-NOT_STAGED_CLASSES_HEADLINE = (
-    "You should set stage marker with '@pytest.mark' ('unit', 'integration' or 'system') for your test class(es):"
-)
+NOT_STAGED_CLASSES_HEADLINE = "You should set stage tag with '@pytest.mark' for your test class(es):"
+NOT_STAGED_CLASSES_TAILLINE = "Possible stage tags: {}".format(STAGE_TAGS)
 CLASSES_STAGED_OK_HEADLINE = "Cool, every test class is staged."
 
-NO_FEATURE_CLASSES_HEADLINE = "You should set BDD marker '@allure.feature' for your test class(es):"
-NO_STORY_FUNCTIONS_HEADLINE = "You should set BDD marker '@allure.story' for your test function(s):"
+NO_FEATURE_CLASSES_HEADLINE = "You should set BDD tag '@allure.feature' for your test class(es):"
+NO_STORY_FUNCTIONS_HEADLINE = "You should set BDD tag '@allure.story' for your test function(s):"
 BDD_MARKED_OK_HEADLINE = "Cool, every test class with its functions is marked with BDD tags."
 
 CURDIR = py.path.local()
@@ -31,7 +30,7 @@ def pytest_addoption(parser):
         action="store_true",
         dest="bdd_markers",
         default=False,
-        help="Show items without Allure BDD markers",
+        help="Show items without Allure BDD tags",
     )
 
 
@@ -48,13 +47,17 @@ def _is_checking_failed(config):
 
 
 def include_if_class_not_staged(cls, lst):
-    if not hasattr(cls, "own_markers") or not [m for m in cls.own_markers if m.name in STAGE_MARKERS]:
+    if not hasattr(cls, "own_markers") or not [m for m in cls.own_markers if m.name in STAGE_TAGS]:
         lst.append(cls)
 
 
 def include_if_class_without_feature(cls, lst):
     if not [m for m in cls.own_markers if m.name == "allure_label" and m.kwargs.get("label_type") == "feature"]:
         lst.append(cls)
+
+
+def include_if_function_without_class(func, lst):
+    pass
 
 
 def include_if_function_without_story(func, lst):
@@ -109,10 +112,12 @@ def get_not_staged_classes(session):
 def get_not_marked_items(session):
     no_feature_classes = []
     no_story_functions = []
+    not_classified_functions = []
     for cls, func in get_items(session):
         if cls:
             include_if_class_without_feature(cls, no_feature_classes)
         include_if_function_without_story(func, no_story_functions)
+        include_if_function_without_class(func, not_classified_functions)
     return no_feature_classes, no_story_functions
 
 
@@ -139,6 +144,7 @@ def is_checking_failed(config, session):
         if not_staged_classes:
             tw.line(NOT_STAGED_CLASSES_HEADLINE, red=True)
             write_classes(tw, not_staged_classes)
+            tw.line(NOT_STAGED_CLASSES_TAILLINE, red=True)
             failed = True
         else:
             tw.line(CLASSES_STAGED_OK_HEADLINE, green=True)

@@ -58,7 +58,7 @@ Example of 'pytest' run with provided options:
 
     (hidden for brevity)
 
-    You should set stage marker with '@pytest.mark' ('unit', 'integration' or 'system') for your test class(es):
+    You should set stage tag with '@pytest.mark' for your test class(es):
     Test class name: 'TestClass', location: /path/to/file.py
 
     ============== no tests ran in 0.00 seconds ===============
@@ -69,10 +69,10 @@ Example of 'pytest' run with provided options:
 
     (hidden for brevity)
 
-    You should set BDD marker '@allure.feature' for your test class(es):
+    You should set BDD tag '@allure.feature' for your test class(es):
     Test class: 'TestClass', location: /path/to/file.py
 
-    You should set BDD marker '@allure.story' for your test function(s):
+    You should set BDD tag '@allure.story' for your test function(s):
     Test function: 'test_case', location: /path/to/file.py
 
     ============== no tests ran in 0.00 seconds ===============
