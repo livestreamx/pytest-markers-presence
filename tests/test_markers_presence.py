@@ -7,7 +7,7 @@ from pytest_markers_presence import EXIT_CODE_ERROR, EXIT_CODE_SUCCESS, STAGE_TA
 @pytest.mark.parametrize(
     ("option", "msg"),
     [
-        ("--stage-markers", "Cool, every test class is staged"),
+        ("--stage-markers", "Cool, every test class is staged, functions are classified"),
         ("--bdd-markers", "Cool, every test class with its functions is marked with BDD tags"),
     ],
 )
@@ -37,7 +37,7 @@ def test_help_message(testdir):
     result.stdout.fnmatch_lines(
         [
             "markers-presence:*",
-            "*--stage-markers*Show not staged classes",
+            "*--stage-markers*Show not staged classes and not classified functions",
             "*--bdd-markers*Show items without Allure BDD tags",
         ]
     )
@@ -70,7 +70,7 @@ def test_markers_with_class(testdir, option, msg):
 @pytest.mark.parametrize(
     ("option", "msg"),
     [
-        ("--stage-markers", "Cool, every test class is staged."),
+        ("--stage-markers", "You should create test class(es) for your test function(s):"),
         ("--bdd-markers", "You should set BDD tag '@allure.story'"),
     ],
 )
@@ -89,8 +89,36 @@ def test_markers_without_class(testdir, option, msg):
 
 
 @pytest.mark.parametrize("option", ["--stage-markers"])
+def test_stage_markers_complex(testdir, option):
+    """Make sure that pytest fails session with our fixtures."""
+
+    testdir.makepyfile(
+        """
+        class TestClass:
+            def test_case1(self):
+                assert True
+        
+        def test_case2(self):
+            assert True
+        """
+    )
+    result = testdir.runpytest(option)
+    result.stdout.fnmatch_lines(
+        [
+            "*You should set stage tag*",
+            "*TestClass*",
+            "Possible stage tags*",
+            "You should create test class(es) for your test function(s):",
+            "*test_case2*",
+            "*no tests ran in *",
+        ]
+    )
+    assert result.ret == EXIT_CODE_ERROR
+
+
+@pytest.mark.parametrize("option", ["--stage-markers"])
 @pytest.mark.parametrize("tag", STAGE_TAGS)
-@pytest.mark.parametrize("msg", ["Cool, every test class is staged."])
+@pytest.mark.parametrize("msg", ["Cool, every test class is staged, functions are classified."])
 def test_stage_markers_only(testdir, option, tag, msg):
     testdir.makepyfile(
         """
@@ -183,7 +211,7 @@ def test_all_markers_together(testdir, options, tag):
     result = testdir.runpytest(*options)
     result.stdout.fnmatch_lines(
         [
-            "*Cool, every test class is staged*",
+            "*Cool, every test class is staged, functions are classified*",
             "*Cool, every test class with its functions is marked with BDD tags*",
             "*no tests ran in *",
         ]
@@ -204,7 +232,7 @@ def test_fixture_not_affected(testdir, options):
     result = testdir.runpytest(*options)
     result.stdout.fnmatch_lines(
         [
-            "*Cool, every test class is staged*",
+            "*Cool, every test class is staged, functions are classified*",
             "*Cool, every test class with its functions is marked with BDD tags*",
             "*no tests ran in *",
         ]
@@ -226,7 +254,7 @@ def test_yml_not_affected(testdir, options):
     result = testdir.runpytest(*options)
     result.stdout.fnmatch_lines(
         [
-            "*Cool, every test class is staged*",
+            "*Cool, every test class is staged, functions are classified*",
             "*Cool, every test class with its functions is marked with BDD tags*",
             "*no tests ran in *",
         ]
@@ -252,7 +280,7 @@ def test_bdd_step_not_affected(testdir, options, framework, bdd_step):
     result = testdir.runpytest(*options)
     result.stdout.fnmatch_lines(
         [
-            "*Cool, every test class is staged*",
+            "*Cool, every test class is staged, functions are classified*",
             "*Cool, every test class with its functions is marked with BDD tags*",
             "*no tests ran in *",
         ]
