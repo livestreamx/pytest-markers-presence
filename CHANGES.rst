@@ -1,6 +1,14 @@
 Changelog
 ---------
 
+0.4.0
+~~~~~
+
+* Implemented detection of not classified functions usage
+* Updated documentation
+* Updated dev-requirements
+* Updated tests
+
 0.3.0
 ~~~~~
 

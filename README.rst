@@ -26,7 +26,7 @@ Make the repository with your tests more structured and beautiful.
 Features
 --------
 
-* List not staged (unit, integration or system) test classes
+* List not staged test classes and not classified functions
 * List missed Allure BDD tags for traditional test classes and functions (exclude fixtures and other incompatible objects)
 
 
@@ -60,6 +60,9 @@ Example of 'pytest' run with provided options:
 
     You should set stage tag with '@pytest.mark' for your test class(es):
     Test class name: 'TestClass', location: /path/to/file.py
+
+    You should create test class(es) for your test function(s):
+    Test function: 'test_function', location: /path/to/other_file.py
 
     ============== no tests ran in 0.00 seconds ===============
 
