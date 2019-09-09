@@ -5,10 +5,7 @@ from pytest_markers_presence import EXIT_CODE_ERROR, EXIT_CODE_SUCCESS
 
 
 @pytest.mark.parametrize(
-    ("option", "msg"),
-    [
-        ("--bdd-markers", "Cool, every test class with its functions is marked with BDD tags"),
-    ],
+    ("option", "msg"), [("--bdd-markers", "Cool, every test class with its functions is marked with BDD tags")]
 )
 def test_empty_bdd_markers(testdir, option, msg):
     """Make sure that pytest accepts 'bdd-markers' fixtures."""
@@ -72,11 +69,7 @@ def test_markers_with_class(testdir, option):
     )
     result = testdir.runpytest(option)
     result.stdout.fnmatch_lines(
-        [
-            "*You should set BDD tag '@allure.feature'*",
-            "*You should set BDD tag '@allure.story'*",
-            "*no tests ran in *"
-        ]
+        ["*You should set BDD tag '@allure.feature'*", "*You should set BDD tag '@allure.story'*", "*no tests ran in *"]
     )
     assert result.ret == EXIT_CODE_ERROR
 
@@ -118,11 +111,7 @@ def test_bdd_markers_complex(testdir, option):
     )
     result = testdir.runpytest(option)
     result.stdout.fnmatch_lines(
-        [
-            "You should create test class(es) for your test function(s):",
-            "*test_case2*",
-            "*no tests ran in *",
-        ]
+        ["You should create test class(es) for your test function(s):", "*test_case2*", "*no tests ran in *"]
     )
     assert result.ret == EXIT_CODE_ERROR
 
@@ -142,7 +131,7 @@ def test_markers_not_classified_only(testdir, option):
     result.stdout.fnmatch_lines(
         [
             "*You should set BDD tag '@allure.feature' for your test class(es)*",
-            "*You should set BDD tag '@allure.story' for your test function(s)*"
+            "*You should set BDD tag '@allure.story' for your test function(s)*",
         ]
     )
     assert result.ret == EXIT_CODE_ERROR

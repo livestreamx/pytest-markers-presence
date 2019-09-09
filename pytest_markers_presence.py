@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import List
 
+import warnings
 import _pytest.config
 import _pytest.python
 from _pytest.main import wrap_session
@@ -9,6 +10,12 @@ from more_itertools import first
 
 EXIT_CODE_ERROR = 11
 EXIT_CODE_SUCCESS = 0
+
+CORRECT_TESTS_FOLDER_PATTERN = "tests"
+UNIT_TESTS_MARKER = "UNIT"
+MIN_TESTS_SUBFOLDERS_NUM = 3
+
+BDD_CHECKING_EXCLUDED_MARKERS = ["BEHAVE", "BEHAVIOR", "BDD"]
 
 NOT_CLASSIFIED_FUNCTIONS_HEADLINE = "You should create test class(es) for your test function(s):"
 CLASSES_OK_HEADLINE = "Cool, every function is classified."
@@ -38,29 +45,51 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_collection_modifyitems(session, config):
-    if config.option.stage_markers:
-        test_dir = first(CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch('tests')))
-        staging_markers = [
-            d.basename for d in test_dir.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch('[!__]*'))
-        ]
-        for item in get_valid_session_items(session):
-            try:
-                marker = next(m for m in staging_markers if test_dir.join(m).strpath in item.fspath.strpath)
-                item.add_marker(marker)
-            except StopIteration:
-                raise NameError(
-                    f"Could not collect test function '{get_function_name(item)}'! Please, place your tests into "
-                    f"'tests' folder and create directories (for example, 'unit') for tests classification."
-                )
-
-
 def pytest_cmdline_main(config):
     if config.option.bdd_markers:
         config.option.verbose = -1
         if wrap_session(config, is_checking_failed):
             return EXIT_CODE_ERROR
         return EXIT_CODE_SUCCESS
+
+
+def pytest_collection_modifyitems(session, config):
+    if config.option.stage_markers:
+        try:
+            test_dir = first(
+                CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN))
+            )
+        except ValueError:
+            warnings.warn(f"Could not find folder '{CORRECT_TESTS_FOLDER_PATTERN}' in '{CURDIR.strpath}'!", UserWarning)
+            return
+
+        staging_markers = [
+            d.basename for d in test_dir.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch('[!__]*'))
+        ]
+        if not staging_markers:
+            warnings.warn(
+                f"No one subfolder was found in '{test_dir.basename}' folder, so test markers had not been generated!",
+                UserWarning,
+            )
+            return
+        if len(staging_markers) < MIN_TESTS_SUBFOLDERS_NUM:
+            warnings.warn(
+                f"You should have at least {MIN_TESTS_SUBFOLDERS_NUM} directories to make staging better.", UserWarning
+            )
+        if UNIT_TESTS_MARKER not in [m.upper() for m in staging_markers]:
+            warnings.warn(f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning)
+
+        for item in get_valid_session_items(session):
+            try:
+                marker = next(m for m in staging_markers if test_dir.join(m).strpath in item.fspath.strpath)
+            except StopIteration:
+                warnings.warn(
+                    f"Could not add item for test function '{get_function_name(item)}'! Please, place your function "
+                    f"into {CORRECT_TESTS_FOLDER_PATTERN} folder and create directories (for example, 'unit') for "
+                    f"tests classification.",
+                    UserWarning,
+                )
+            item.add_marker(marker)
 
 
 def include_if_class_without_feature(cls, lst):
