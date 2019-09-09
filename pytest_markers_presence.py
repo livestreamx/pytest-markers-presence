@@ -26,25 +26,18 @@ NO_FEATURE_CLASSES_HEADLINE = "You should set BDD tag '@allure.feature' for your
 NO_STORY_FUNCTIONS_HEADLINE = "You should set BDD tag '@allure.story' for your test function(s):"
 BDD_MARKED_OK_HEADLINE = "Cool, every test class with its functions is marked with BDD tags."
 
+STAGE_MARKERS_HELP = f"Stage project with markers based on directories names in '{CORRECT_TESTS_FOLDER_PATTERN}' folder"
+BDD_MARKERS_HELP = "Show not classified functions usage and items without Allure BDD tags"
+
 CURDIR = py.path.local()
 
 
 def pytest_addoption(parser):
     group = parser.getgroup("markers-presence", 'Markers presence')
     group.addoption(
-        "--stage-markers",
-        action="store_true",
-        dest="stage_markers",
-        default=False,
-        help=f"Stage project with markers based on directories names in '{CORRECT_TESTS_FOLDER_PATTERN}' folder",
+        "--stage-markers", action="store_true", dest="stage_markers", default=False, help=STAGE_MARKERS_HELP
     )
-    group.addoption(
-        "--bdd-markers",
-        action="store_true",
-        dest="bdd_markers",
-        default=False,
-        help="Show not classified functions usage and items without Allure BDD tags",
-    )
+    group.addoption("--bdd-markers", action="store_true", dest="bdd_markers", default=False, help=BDD_MARKERS_HELP)
 
 
 def pytest_cmdline_main(config):
@@ -76,7 +69,8 @@ def pytest_collection_modifyitems(session, config):
             return
         if len(staging_markers) < MIN_TESTS_SUBFOLDERS_NUM:
             warnings.warn(
-                f"You should have at least {MIN_TESTS_SUBFOLDERS_NUM} directories to make staging better.", UserWarning
+                f"You should have at least {MIN_TESTS_SUBFOLDERS_NUM} directories for tests to make staging better.",
+                UserWarning,
             )
         if UNIT_TESTS_MARKER not in to_upper_case(staging_markers):
             warnings.warn(f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning)

@@ -9,7 +9,7 @@ lint:
 
 test:
 	pip install -e .
-	pytest
+	pytest --stage-markers
 
 test-release: clear
 	python setup.py sdist bdist_wheel
