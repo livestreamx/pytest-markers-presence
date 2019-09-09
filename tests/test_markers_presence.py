@@ -4,28 +4,6 @@ import pytest
 from pytest_markers_presence import EXIT_CODE_ERROR, EXIT_CODE_SUCCESS
 
 
-@pytest.mark.parametrize("option", ["--bdd-markers"])
-def test_markers_with_class(testdir, option):
-    """Make sure that pytest fails session with our fixtures."""
-
-    testdir.makepyfile(
-        """
-        class TestClass:
-            def test_case(self):
-                assert True
-        """
-    )
-    result = testdir.runpytest(option)
-    result.stdout.fnmatch_lines(
-        [
-            "*You should set BDD tag '@allure.feature'*",
-            "*You should set BDD tag '@allure.story'*",
-            "*no tests ran in *"
-        ]
-    )
-    assert result.ret == EXIT_CODE_ERROR
-
-
 @pytest.mark.parametrize(
     ("option", "msg"),
     [
@@ -81,6 +59,28 @@ def test_help_message(testdir):
     )
 
 
+@pytest.mark.parametrize("option", ["--bdd-markers"])
+def test_markers_with_class(testdir, option):
+    """Make sure that pytest fails session with our fixtures."""
+
+    testdir.makepyfile(
+        """
+        class TestClass:
+            def test_case(self):
+                assert True
+        """
+    )
+    result = testdir.runpytest(option)
+    result.stdout.fnmatch_lines(
+        [
+            "*You should set BDD tag '@allure.feature'*",
+            "*You should set BDD tag '@allure.story'*",
+            "*no tests ran in *"
+        ]
+    )
+    assert result.ret == EXIT_CODE_ERROR
+
+
 @pytest.mark.parametrize(
     ("option", "msg"),
     [
@@ -132,7 +132,7 @@ def test_markers_not_classified_only(testdir, option):
     testdir.makepyfile(
         """
         import pytest
-        @pytest.mark.unit
+        
         class TestClass:
             def test_case(self):
                 assert True
@@ -184,10 +184,10 @@ def test_bdd_markers_story_only(testdir, option, msg):
     assert result.ret == EXIT_CODE_ERROR
 
 
+'''
 @pytest.mark.parametrize("option", ["--bdd-markers"])
 @pytest.mark.parametrize("msg", ["Cool, every test class with its functions is marked with BDD tags"])
 def test_bdd_markers_correct_format(testdir, option, msg):
-    print(str(testdir.tmpdir.listdir()))
     testdir.makepyfile(
         """
         import allure
@@ -204,7 +204,6 @@ def test_bdd_markers_correct_format(testdir, option, msg):
     assert result.ret == EXIT_CODE_SUCCESS
 
 
-'''
 @pytest.mark.parametrize("options", ["--bdd-markers"])
 def test_all_markers_together(testdir, options, tag):
     testdir.makepyfile(

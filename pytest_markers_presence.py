@@ -96,7 +96,7 @@ def get_valid_session_items(session):
     It is necessary in case of different pytest plugins those provide incompatible
     logical constructions, for example Tavern framework.
     """
-    return [item for item in session.items if hasattr(item, 'originalname') and hasattr(item, '_fixtureinfo')]
+    return [item for item in session.items if hasattr(item, 'originalname')]
 
 
 def get_items(session):
@@ -167,6 +167,5 @@ def is_checking_failed(config, session):
     if issues.no_story_functions:
         tw.line(NO_STORY_FUNCTIONS_HEADLINE, red=True)
         write_functions(tw, issues.no_story_functions)
-        tw.line(NO_STORY_FUNCTIONS_HEADLINE, red=True)
 
     return issues.are_exists()
