@@ -15,7 +15,9 @@ CORRECT_TESTS_FOLDER_PATTERN = "tests"
 UNIT_TESTS_MARKER = "UNIT"
 MIN_TESTS_SUBFOLDERS_NUM = 3
 
-BDD_CHECKING_EXCLUDED_MARKERS = ["BEHAVE", "BEHAVIOR", "BDD"]
+BDD_CHECKING_EXCLUDED_MARKERS = ["BEHAVE", "BEHAVIOR", "BDD", "PRESENCE_IGNORE"]
+ALLURE_FEATURE_TAG = "feature"
+ALLURE_STORY_TAG = "story"
 
 NOT_CLASSIFIED_FUNCTIONS_HEADLINE = "You should create test class(es) for your test function(s):"
 CLASSES_OK_HEADLINE = "Cool, every function is classified."
@@ -34,7 +36,7 @@ def pytest_addoption(parser):
         action="store_true",
         dest="stage_markers",
         default=False,
-        help="Stage project with markers based on directories names in 'tests' folder",
+        help=f"Stage project with markers based on directories names in '{CORRECT_TESTS_FOLDER_PATTERN}' folder",
     )
     group.addoption(
         "--bdd-markers",
@@ -76,7 +78,7 @@ def pytest_collection_modifyitems(session, config):
             warnings.warn(
                 f"You should have at least {MIN_TESTS_SUBFOLDERS_NUM} directories to make staging better.", UserWarning
             )
-        if UNIT_TESTS_MARKER not in [m.upper() for m in staging_markers]:
+        if UNIT_TESTS_MARKER not in to_upper_case(staging_markers):
             warnings.warn(f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning)
 
         for item in get_valid_session_items(session):
@@ -89,12 +91,24 @@ def pytest_collection_modifyitems(session, config):
                     f"tests classification.",
                     UserWarning,
                 )
+                continue
             item.add_marker(marker)
 
 
-def include_if_class_without_feature(cls, lst):
-    if not [m for m in cls.own_markers if m.name == "allure_label" and m.kwargs.get("label_type") == "feature"]:
-        lst.append(cls)
+def to_upper_case(lst):
+    return [item.upper() for item in lst]
+
+
+def get_item_markers_names(item):
+    return [m.name for m in item.own_markers]
+
+
+def detect_excluded_markers(item):
+    return set(to_upper_case(get_item_markers_names(item))) & set(BDD_CHECKING_EXCLUDED_MARKERS)
+
+
+def is_allure_marker_with_label(marker, label):
+    return marker.name == "allure_label" and marker.kwargs.get("label_type") == label
 
 
 def include_if_function_without_class(func, lst):
@@ -102,9 +116,19 @@ def include_if_function_without_class(func, lst):
         lst.append(func)
 
 
+def include_if_class_without_feature(cls, lst):
+    if not [m for m in cls.own_markers if is_allure_marker_with_label(m, ALLURE_FEATURE_TAG)]:
+        lst.append(cls)
+
+
 def include_if_function_without_story(func, lst):
-    if not [m for m in func.own_markers if m.name == "allure_label" and m.kwargs.get("label_type") == "story"]:
+    if not [m for m in func.own_markers if is_allure_marker_with_label(m, ALLURE_STORY_TAG)]:
         lst.append(func)
+
+
+def is_parent_excluded(func):
+    parent = func.getparent(_pytest.python.Class)
+    return parent and detect_excluded_markers(parent)
 
 
 def get_function_name(func):
@@ -155,10 +179,11 @@ class Issues:
 def get_not_marked_items(session):
     issues = Issues()
     for cls, func in get_items(session):
-        if cls:
+        if cls and not detect_excluded_markers(cls):
             include_if_class_without_feature(cls, issues.no_feature_classes)
-        include_if_function_without_class(func, issues.not_classified_functions)
-        include_if_function_without_story(func, issues.no_story_functions)
+        if not detect_excluded_markers(func) and not is_parent_excluded(func):
+            include_if_function_without_class(func, issues.not_classified_functions)
+            include_if_function_without_story(func, issues.no_story_functions)
     return issues
 
 
