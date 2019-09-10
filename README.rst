@@ -26,7 +26,8 @@ Make the repository with your tests more structured and beautiful.
 Features
 --------
 
-* List not staged test classes and not classified functions
+* Dynamical tests marking based on 'tests' subfolders
+* List not classified functions
 * List missed Allure BDD tags for traditional test classes and functions (exclude fixtures and other incompatible objects)
 
 
@@ -41,36 +42,36 @@ You can install "pytest-markers-presence" via `pip`_ from `PyPI`_::
 Usage
 -----
 
-The `--stage-markers` and other provided options will not run your tests and it's also sensible for errors in the pytest
+The `--stage-markers` option is compatible with simple pytest run loop and could be used for dynamical tests marking.
+
+The `--bdd-markers` option will not run your tests and it's also sensible for errors in the pytest
 collection step. If you are using as part of you CI process the recommended way is to run it after the default test run.
 For example:
 
     script:
       - pytest
-      - pytest --stage-markers --bdd-markers
+      - pytest --stage-markers
+      - pytest --bdd-markers
 
 
 Example of 'pytest' run with provided options:
 
-    $ pytest --stage-markers
+    $ pytest tests --stage-markers
 
-    =================== test session starts ===================
+    ======================= test session starts =======================
 
     (hidden for brevity)
 
-    You should set stage tag with '@pytest.mark' for your test class(es):
-    Test class name: 'TestClass', location: /path/to/file.py
-
-    You should create test class(es) for your test function(s):
-    Test function: 'test_function', location: /path/to/other_file.py
-
-    ============== no tests ran in 0.00 seconds ===============
+    ==================== 1 passed in 0.51 seconds =====================
 
     $ pytest --bdd-markers
 
-    =================== test session starts ===================
+    ======================= test session starts =======================
 
     (hidden for brevity)
+
+    You should create test class(es) for your test function(s):
+    Test function: 'test_function', location: /path/to/test.py
 
     You should set BDD tag '@allure.feature' for your test class(es):
     Test class: 'TestClass', location: /path/to/file.py
@@ -78,7 +79,7 @@ Example of 'pytest' run with provided options:
     You should set BDD tag '@allure.story' for your test function(s):
     Test function: 'test_case', location: /path/to/file.py
 
-    ============== no tests ran in 0.00 seconds ===============
+    ================== no tests ran in 0.00 seconds ===================
 
 
 Contributing

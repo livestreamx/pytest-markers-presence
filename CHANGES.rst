@@ -1,6 +1,14 @@
 Changelog
 ---------
 
+0.5.0
+~~~~~
+
+* Implemented new logic for '--stage-markers' option
+* Implemented support for dynamical tests marking
+* Updated '--bdd-markers' logic
+* Updated tests
+
 0.4.0
 ~~~~~
 
