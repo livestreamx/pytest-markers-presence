@@ -1,64 +1,108 @@
 # -*- coding: utf-8 -*-
+from typing import List
+
+import warnings
 import _pytest.config
 import _pytest.python
 from _pytest.main import wrap_session
 import py
+from more_itertools import first
 
 EXIT_CODE_ERROR = 11
 EXIT_CODE_SUCCESS = 0
 
-STAGE_TAGS = ["unit", "integration", "api", "system", "ui"]
+CORRECT_TESTS_FOLDER_PATTERN = "tests"
+UNIT_TESTS_MARKER = "UNIT"
+MIN_TESTS_SUBFOLDERS_NUM = 3
 
-NOT_STAGED_CLASSES_HEADLINE = "You should set stage tag with '@pytest.mark' for your test class(es):"
-NOT_STAGED_CLASSES_TAILLINE = "Possible stage tags: {}".format(STAGE_TAGS)
+BDD_CHECKING_EXCLUDED_MARKERS = ["BEHAVE", "BEHAVIOR", "BDD", "PRESENCE_IGNORE"]
+ALLURE_FEATURE_TAG = "feature"
+ALLURE_STORY_TAG = "story"
+
 NOT_CLASSIFIED_FUNCTIONS_HEADLINE = "You should create test class(es) for your test function(s):"
-CLASSES_OK_HEADLINE = "Cool, every test class is staged, functions are classified."
+CLASSES_OK_HEADLINE = "Cool, every function is classified."
 
 NO_FEATURE_CLASSES_HEADLINE = "You should set BDD tag '@allure.feature' for your test class(es):"
 NO_STORY_FUNCTIONS_HEADLINE = "You should set BDD tag '@allure.story' for your test function(s):"
 BDD_MARKED_OK_HEADLINE = "Cool, every test class with its functions is marked with BDD tags."
 
+STAGE_MARKERS_HELP = f"Stage project with markers based on directories names in '{CORRECT_TESTS_FOLDER_PATTERN}' folder"
+BDD_MARKERS_HELP = "Show not classified functions usage and items without Allure BDD tags"
+
 CURDIR = py.path.local()
 
 
 def pytest_addoption(parser):
-    group = parser.getgroup("markers-presence")
+    group = parser.getgroup("markers-presence", 'Markers presence')
     group.addoption(
-        "--stage-markers",
-        action="store_true",
-        dest="stage_markers",
-        default=False,
-        help="Show not staged classes and not classified functions and not classified functions",
+        "--stage-markers", action="store_true", dest="stage_markers", default=False, help=STAGE_MARKERS_HELP
     )
-    group.addoption(
-        "--bdd-markers",
-        action="store_true",
-        dest="bdd_markers",
-        default=False,
-        help="Show items without Allure BDD tags",
-    )
+    group.addoption("--bdd-markers", action="store_true", dest="bdd_markers", default=False, help=BDD_MARKERS_HELP)
 
 
 def pytest_cmdline_main(config):
-    if config.option.stage_markers or config.option.bdd_markers:
+    if config.option.bdd_markers:
         config.option.verbose = -1
-        if _is_checking_failed(config):
+        if wrap_session(config, is_checking_failed):
             return EXIT_CODE_ERROR
         return EXIT_CODE_SUCCESS
 
 
-def _is_checking_failed(config):
-    return wrap_session(config, is_checking_failed)
+def pytest_collection_modifyitems(session, config):
+    if config.option.stage_markers:
+        try:
+            test_dir = first(
+                CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN))
+            )
+        except ValueError:
+            warnings.warn(f"Could not find folder '{CORRECT_TESTS_FOLDER_PATTERN}' in '{CURDIR.strpath}'!", UserWarning)
+            return
+
+        staging_markers = [
+            d.basename for d in test_dir.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch('[!__]*'))
+        ]
+        if not staging_markers:
+            warnings.warn(
+                f"No one subfolder was found in '{test_dir.basename}' folder, so test markers had not been generated!",
+                UserWarning,
+            )
+            return
+        if len(staging_markers) < MIN_TESTS_SUBFOLDERS_NUM:
+            warnings.warn(
+                f"You should have at least {MIN_TESTS_SUBFOLDERS_NUM} directories for tests to make staging better.",
+                UserWarning,
+            )
+        if UNIT_TESTS_MARKER not in to_upper_case(staging_markers):
+            warnings.warn(f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning)
+
+        for item in get_valid_session_items(session):
+            try:
+                marker = next(m for m in staging_markers if test_dir.join(m).strpath in item.fspath.strpath)
+            except StopIteration:
+                warnings.warn(
+                    f"Could not add item for test function '{get_function_name(item)}'! Please, place your function "
+                    f"into {CORRECT_TESTS_FOLDER_PATTERN} folder and create directories (for example, 'unit') for "
+                    f"tests classification.",
+                    UserWarning,
+                )
+                continue
+            item.add_marker(marker)
 
 
-def include_if_class_not_staged(cls, lst):
-    if not hasattr(cls, "own_markers") or not [m for m in cls.own_markers if m.name in STAGE_TAGS]:
-        lst.append(cls)
+def to_upper_case(lst):
+    return [item.upper() for item in lst]
 
 
-def include_if_class_without_feature(cls, lst):
-    if not [m for m in cls.own_markers if m.name == "allure_label" and m.kwargs.get("label_type") == "feature"]:
-        lst.append(cls)
+def get_item_markers_names(item):
+    return [m.name for m in item.own_markers]
+
+
+def detect_excluded_markers(item):
+    return set(to_upper_case(get_item_markers_names(item))) & set(BDD_CHECKING_EXCLUDED_MARKERS)
+
+
+def is_allure_marker_with_label(marker, label):
+    return marker.name == "allure_label" and marker.kwargs.get("label_type") == label
 
 
 def include_if_function_without_class(func, lst):
@@ -66,9 +110,19 @@ def include_if_function_without_class(func, lst):
         lst.append(func)
 
 
+def include_if_class_without_feature(cls, lst):
+    if not [m for m in cls.own_markers if is_allure_marker_with_label(m, ALLURE_FEATURE_TAG)]:
+        lst.append(cls)
+
+
 def include_if_function_without_story(func, lst):
-    if not [m for m in func.own_markers if m.name == "allure_label" and m.kwargs.get("label_type") == "story"]:
+    if not [m for m in func.own_markers if is_allure_marker_with_label(m, ALLURE_STORY_TAG)]:
         lst.append(func)
+
+
+def is_parent_excluded(func):
+    parent = func.getparent(_pytest.python.Class)
+    return parent and detect_excluded_markers(parent)
 
 
 def get_function_name(func):
@@ -107,24 +161,24 @@ def get_items(session):
                 yield None, function
 
 
-def get_not_staged_classes(session):
-    not_staged_classes = []
-    not_classified_functions = []
-    for cls, func in get_items(session):
-        if cls:
-            include_if_class_not_staged(cls, not_staged_classes)
-        include_if_function_without_class(func, not_classified_functions)
-    return not_staged_classes, not_classified_functions
+class Issues:
+    not_classified_functions: List = []
+    no_feature_classes: List = []
+    no_story_functions: List = []
+
+    def are_exists(self):
+        return bool(self.not_classified_functions + self.no_feature_classes + self.no_story_functions)
 
 
 def get_not_marked_items(session):
-    no_feature_classes = []
-    no_story_functions = []
+    issues = Issues()
     for cls, func in get_items(session):
-        if cls:
-            include_if_class_without_feature(cls, no_feature_classes)
-        include_if_function_without_story(func, no_story_functions)
-    return no_feature_classes, no_story_functions
+        if cls and not detect_excluded_markers(cls):
+            include_if_class_without_feature(cls, issues.no_feature_classes)
+        if not detect_excluded_markers(func) and not is_parent_excluded(func):
+            include_if_function_without_class(func, issues.not_classified_functions)
+            include_if_function_without_story(func, issues.no_story_functions)
+    return issues
 
 
 def write_classes(tw, classes):
@@ -142,36 +196,24 @@ def write_functions(tw, functions):
 def is_checking_failed(config, session):
     session.perform_collect()
     tw = _pytest.config.create_terminal_writer(config)
-    failed = False
+    tw.line()
+    issues = get_not_marked_items(session)
+    if not issues.are_exists():
+        tw.line(CLASSES_OK_HEADLINE, green=True)
+        tw.line(BDD_MARKED_OK_HEADLINE, green=True)
 
-    if config.option.stage_markers:
-        not_staged_classes, not_classified_functions = get_not_staged_classes(session)
+    if issues.not_classified_functions:
+        tw.line(NOT_CLASSIFIED_FUNCTIONS_HEADLINE, red=True)
+        write_functions(tw, issues.not_classified_functions)
         tw.line()
-        if not not_staged_classes and not not_classified_functions:
-            tw.line(CLASSES_OK_HEADLINE, green=True)
-        if not_staged_classes:
-            tw.line(NOT_STAGED_CLASSES_HEADLINE, red=True)
-            write_classes(tw, not_staged_classes)
-            tw.line(NOT_STAGED_CLASSES_TAILLINE, red=True)
-            failed = True
-        if not_classified_functions:
-            tw.line(NOT_CLASSIFIED_FUNCTIONS_HEADLINE, red=True)
-            write_functions(tw, not_classified_functions)
-            failed = True
 
-    if config.option.bdd_markers:
-        no_feature_classes, no_story_functions = get_not_marked_items(session)
+    if issues.no_feature_classes:
+        tw.line(NO_FEATURE_CLASSES_HEADLINE, red=True)
+        write_classes(tw, issues.no_feature_classes)
         tw.line()
-        if not no_feature_classes and not no_story_functions:
-            tw.line(BDD_MARKED_OK_HEADLINE, green=True)
-        if no_feature_classes:
-            tw.line(NO_FEATURE_CLASSES_HEADLINE, red=True)
-            write_classes(tw, no_feature_classes)
-            failed = True
-            tw.line()
-        if no_story_functions:
-            tw.line(NO_STORY_FUNCTIONS_HEADLINE, red=True)
-            write_functions(tw, no_story_functions)
-            failed = True
 
-    return failed
+    if issues.no_story_functions:
+        tw.line(NO_STORY_FUNCTIONS_HEADLINE, red=True)
+        write_functions(tw, issues.no_story_functions)
+
+    return issues.are_exists()
