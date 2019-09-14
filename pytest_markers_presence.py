@@ -4,9 +4,14 @@ from typing import List
 import warnings
 import _pytest.config
 import _pytest.python
+import allure
 from _pytest.main import wrap_session
 import py
 from more_itertools import first
+
+STAGE_MARKERS_OPT = "--stage-markers"
+BDD_MARKERS_OPT = "--bdd-markers"
+ASSERTIONS_OPT = "--assertions"
 
 EXIT_CODE_ERROR = 11
 EXIT_CODE_SUCCESS = 0
@@ -28,6 +33,9 @@ BDD_MARKED_OK_HEADLINE = "Cool, every test class with its functions is marked wi
 
 STAGE_MARKERS_HELP = f"Stage project with markers based on directories names in '{CORRECT_TESTS_FOLDER_PATTERN}' folder"
 BDD_MARKERS_HELP = "Show not classified functions usage and items without Allure BDD tags"
+ASSERTIONS_HELP = "Represent assertion comparisons with Allure steps"
+
+ASSERTION_FAILED_MESSAGE = '   Assertion failed!'
 
 CURDIR = py.path.local()
 
@@ -35,9 +43,10 @@ CURDIR = py.path.local()
 def pytest_addoption(parser):
     group = parser.getgroup("markers-presence", 'Markers presence')
     group.addoption(
-        "--stage-markers", action="store_true", dest="stage_markers", default=False, help=STAGE_MARKERS_HELP
+        STAGE_MARKERS_OPT, action="store_true", dest="stage_markers", default=False, help=STAGE_MARKERS_HELP
     )
-    group.addoption("--bdd-markers", action="store_true", dest="bdd_markers", default=False, help=BDD_MARKERS_HELP)
+    group.addoption(BDD_MARKERS_OPT, action="store_true", dest="bdd_markers", default=False, help=BDD_MARKERS_HELP)
+    group.addoption(ASSERTIONS_OPT, action="store_true", dest="assertions", default=False, help=ASSERTIONS_HELP)
 
 
 def pytest_cmdline_main(config):
@@ -54,39 +63,46 @@ def pytest_collection_modifyitems(session, config):
             test_dir = first(
                 CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN))
             )
+            mark_tests_by_location(session, test_dir)
         except ValueError:
             warnings.warn(f"Could not find folder '{CORRECT_TESTS_FOLDER_PATTERN}' in '{CURDIR.strpath}'!", UserWarning)
             return
 
-        staging_markers = [
-            d.basename for d in test_dir.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch('[!__]*'))
-        ]
-        if not staging_markers:
-            warnings.warn(
-                f"No one subfolder was found in '{test_dir.basename}' folder, so test markers had not been generated!",
-                UserWarning,
-            )
-            return
-        if len(staging_markers) < MIN_TESTS_SUBFOLDERS_NUM:
-            warnings.warn(
-                f"You should have at least {MIN_TESTS_SUBFOLDERS_NUM} directories for tests to make staging better.",
-                UserWarning,
-            )
-        if UNIT_TESTS_MARKER not in to_upper_case(staging_markers):
-            warnings.warn(f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning)
 
-        for item in get_valid_session_items(session):
-            try:
-                marker = next(m for m in staging_markers if test_dir.join(m).strpath in item.fspath.strpath)
-            except StopIteration:
-                warnings.warn(
-                    f"Could not add item for test function '{get_function_name(item)}'! Please, place your function "
-                    f"into {CORRECT_TESTS_FOLDER_PATTERN} folder and create directories (for example, 'unit') for "
-                    f"tests classification.",
-                    UserWarning,
-                )
-                continue
-            item.add_marker(marker)
+def pytest_assertrepr_compare(config, op, left, right):
+    if config.option.assertions:
+        with allure.step(f"Assertion: {left} {op} {right}"):
+            return [f'{left} {op} {right}', ASSERTION_FAILED_MESSAGE]
+
+
+def mark_tests_by_location(session, test_dir):
+    staging_markers = [d.basename for d in test_dir.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch('[!__]*'))]
+    if not staging_markers:
+        warnings.warn(
+            f"No one subfolder was found in '{test_dir.basename}' folder, so test markers had not been generated!",
+            UserWarning,
+        )
+        return
+    if len(staging_markers) < MIN_TESTS_SUBFOLDERS_NUM:
+        warnings.warn(
+            f"You should have at least {MIN_TESTS_SUBFOLDERS_NUM} directories for tests to make staging better.",
+            UserWarning,
+        )
+    if UNIT_TESTS_MARKER not in to_upper_case(staging_markers):
+        warnings.warn(f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning)
+
+    for item in get_valid_session_items(session):
+        try:
+            marker = next(m for m in staging_markers if test_dir.join(m).strpath in item.fspath.strpath)
+        except StopIteration:
+            warnings.warn(
+                f"Could not add item for test function '{get_function_name(item)}'! Please, place your function "
+                f"into {CORRECT_TESTS_FOLDER_PATTERN} folder and create directories (for example, 'unit') for "
+                f"tests classification.",
+                UserWarning,
+            )
+            continue
+        item.add_marker(marker)
 
 
 def to_upper_case(lst):
