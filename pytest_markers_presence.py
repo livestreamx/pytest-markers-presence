@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import enum
 from typing import List
 
 import warnings

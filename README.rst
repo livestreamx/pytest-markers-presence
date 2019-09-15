@@ -54,7 +54,9 @@ For example:
 
     script:
       - pytest
+
       - pytest --stage-markers --assert-steps
+
       - pytest --bdd-markers
 
 
