@@ -13,7 +13,7 @@ from more_itertools import first
 
 STAGE_MARKERS_OPT = "--stage-markers"
 BDD_MARKERS_OPT = "--bdd-markers"
-ASSERTIONS_OPT = "--assert-steps"
+ASSERT_STEPS_OPT = "--assert-steps"
 
 EXIT_CODE_ERROR = 11
 EXIT_CODE_SUCCESS = 0
@@ -35,7 +35,7 @@ BDD_MARKED_OK_HEADLINE = "Cool, every test class with its functions is marked wi
 
 STAGE_MARKERS_HELP = f"Stage project with markers based on directories names in '{CORRECT_TESTS_FOLDER_PATTERN}' folder"
 BDD_MARKERS_HELP = "Show not classified functions usage and items without Allure BDD tags"
-ASSERTIONS_HELP = "Represent assertion comparisons with Allure steps"
+ASSERT_STEPS_HELP = "Represent assertion comparisons with Allure steps"
 
 ASSERTION_FAILED_MESSAGE = 'Assertion failed'
 
@@ -48,7 +48,7 @@ def pytest_addoption(parser):
         STAGE_MARKERS_OPT, action="store_true", dest="stage_markers", default=False, help=STAGE_MARKERS_HELP
     )
     group.addoption(BDD_MARKERS_OPT, action="store_true", dest="bdd_markers", default=False, help=BDD_MARKERS_HELP)
-    group.addoption(ASSERTIONS_OPT, action="store_true", dest="assertions", default=False, help=ASSERTIONS_HELP)
+    group.addoption(ASSERT_STEPS_OPT, action="store_true", dest="assert_steps", default=False, help=ASSERT_STEPS_HELP)
 
 
 def pytest_cmdline_main(config):
@@ -72,7 +72,7 @@ def pytest_collection_modifyitems(session, config):
 
 
 def pytest_assertrepr_compare(config, op, left, right):
-    if config.option.assertions:
+    if config.option.assert_steps:
         with pytest.raises(AssertionError):
             with allure.step(f"{ASSERTION_FAILED_MESSAGE}: {left} {op} {right}"):
                 assert eval(f"{left}{op}{right}")

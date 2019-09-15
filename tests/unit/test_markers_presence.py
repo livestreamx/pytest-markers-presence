@@ -4,7 +4,7 @@ import pytest
 from pytest_markers_presence import (
     STAGE_MARKERS_OPT,
     BDD_MARKERS_OPT,
-    ASSERTIONS_OPT,
+    ASSERT_STEPS_OPT,
     EXIT_CODE_ERROR,
     EXIT_CODE_SUCCESS,
     CLASSES_OK_HEADLINE,
@@ -46,7 +46,7 @@ class TestMarkersPresencePositive:
         assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
 
     def test_empty_assertions(self, testdir):
-        f"""Make sure that pytest accepts '{ASSERTIONS_OPT}' fixture"""
+        f"""Make sure that pytest accepts '{ASSERT_STEPS_OPT}' fixture"""
 
         # create a temporary pytest test module
         testdir.makepyfile(
@@ -56,7 +56,7 @@ class TestMarkersPresencePositive:
         )
 
         # run pytest with the following cmd args
-        result = testdir.runpytest(ASSERTIONS_OPT, "-v")
+        result = testdir.runpytest(ASSERT_STEPS_OPT, "-v")
 
         # make sure that that we get a '0' exit code for the testsuite
         assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
@@ -90,7 +90,7 @@ class TestMarkersPresencePositive:
                 "*in 'tests' folder",
                 f"*{BDD_MARKERS_OPT}*Show not classified functions usage and items without",
                 "*Allure BDD tags",
-                f"*{ASSERTIONS_OPT}*Represent assertion comparisons with Allure steps",
+                f"*{ASSERT_STEPS_OPT}*Represent assertion comparisons with Allure steps",
             ]
         )
 
@@ -180,7 +180,7 @@ class TestMarkersPresenceNegative:
                 assert x == y
             """
         )
-        result = testdir.runpytest(ASSERTIONS_OPT)
+        result = testdir.runpytest(ASSERT_STEPS_OPT)
         result.stdout.fnmatch_lines(
             [f"*assert 1 == 2", f"*{ASSERTION_FAILED_MESSAGE}*", "*AssertionError", "*1 failed in*"]
         )
@@ -193,6 +193,6 @@ class TestMarkersPresenceNegative:
                 assert False
             """
         )
-        result = testdir.runpytest(ASSERTIONS_OPT)
+        result = testdir.runpytest(ASSERT_STEPS_OPT)
         result.stdout.fnmatch_lines([f"*assert False", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
