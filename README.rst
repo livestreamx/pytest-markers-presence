@@ -18,8 +18,8 @@ pytest-markers-presence
     :target: https://ci.appveyor.com/project/livestreamx/pytest-markers-presence/branch/master
     :alt: See Build Status on AppVeyor
 
-A simple plugin to detect missed `PyTest`_ tags and `Allure`_ BDD markers.
-Make the repository with your tests more structured and beautiful.
+A simple plugin for easy staging your Python3 project's structure of `PyTest`_ tests.
+Make the repository with your tests more structured and beautiful with `Allure`_ ideology.
 
 ----
 
@@ -54,7 +54,7 @@ For example:
 
     script:
       - pytest
-      - pytest --stage-markers --assertions
+      - pytest --stage-markers --assert-steps
       - pytest --bdd-markers
 
 
