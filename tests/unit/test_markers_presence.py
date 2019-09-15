@@ -169,7 +169,7 @@ class TestMarkersPresenceNegative:
         )
         assert result.ret == EXIT_CODE_ERROR
 
-    def test_assert_false(self, testdir):
+    def test_complex_assert(self, testdir):
         """Make sure that pytest fails session with our fixtures."""
 
         testdir.makepyfile(
@@ -181,5 +181,18 @@ class TestMarkersPresenceNegative:
             """
         )
         result = testdir.runpytest(ASSERTIONS_OPT)
-        result.stdout.fnmatch_lines([f"*assert 1 == 2", f"*{ASSERTION_FAILED_MESSAGE}", "*AssertionError"])
+        result.stdout.fnmatch_lines(
+            [f"*assert 1 == 2", f"*{ASSERTION_FAILED_MESSAGE}*", "*AssertionError", "*1 failed in*"]
+        )
+        assert result.ret == pytest.ExitCode.TESTS_FAILED
+
+    def test_assert_false(self, testdir):
+        testdir.makepyfile(
+            """
+            def test_case():
+                assert False
+            """
+        )
+        result = testdir.runpytest(ASSERTIONS_OPT)
+        result.stdout.fnmatch_lines([f"*assert False", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED

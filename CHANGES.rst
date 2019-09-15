@@ -1,6 +1,13 @@
 Changelog
 ---------
 
+0.6.0
+~~~~~
+
+* Implemented assertions rewriting with '--assert-steps' option
+* Minor changes
+* Updated tests
+
 0.5.0
 ~~~~~
 

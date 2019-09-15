@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
+import enum
 from typing import List
 
 import warnings
 import _pytest.config
 import _pytest.python
 import allure
+import pytest
 from _pytest.main import wrap_session
 import py
 from more_itertools import first
 
 STAGE_MARKERS_OPT = "--stage-markers"
 BDD_MARKERS_OPT = "--bdd-markers"
-ASSERTIONS_OPT = "--assertions"
+ASSERTIONS_OPT = "--assert-steps"
 
 EXIT_CODE_ERROR = 11
 EXIT_CODE_SUCCESS = 0
@@ -35,7 +37,7 @@ STAGE_MARKERS_HELP = f"Stage project with markers based on directories names in 
 BDD_MARKERS_HELP = "Show not classified functions usage and items without Allure BDD tags"
 ASSERTIONS_HELP = "Represent assertion comparisons with Allure steps"
 
-ASSERTION_FAILED_MESSAGE = '   Assertion failed!'
+ASSERTION_FAILED_MESSAGE = 'Assertion failed'
 
 CURDIR = py.path.local()
 
@@ -71,8 +73,10 @@ def pytest_collection_modifyitems(session, config):
 
 def pytest_assertrepr_compare(config, op, left, right):
     if config.option.assertions:
-        with allure.step(f"Assertion: {left} {op} {right}"):
-            return [f'{left} {op} {right}', ASSERTION_FAILED_MESSAGE]
+        with pytest.raises(AssertionError):
+            with allure.step(f"{ASSERTION_FAILED_MESSAGE}: {left} {op} {right}"):
+                assert eval(f"{left}{op}{right}")
+        return [f'{left} {op} {right}', f"    {ASSERTION_FAILED_MESSAGE}!"]
 
 
 def mark_tests_by_location(session, test_dir):
