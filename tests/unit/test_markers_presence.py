@@ -182,7 +182,7 @@ class TestMarkersPresenceNegative:
         )
         result = testdir.runpytest(ASSERT_STEPS_OPT)
         result.stdout.fnmatch_lines(
-            [f"*assert 1 == 2", f"*{ASSERTION_FAILED_MESSAGE}*", "*AssertionError", "*1 failed in*"]
+            [f"*assert \"1 == 2\"", f"*{ASSERTION_FAILED_MESSAGE}*", "*AssertionError", "*1 failed in*"]
         )
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 

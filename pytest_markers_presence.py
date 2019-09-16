@@ -73,9 +73,9 @@ def pytest_collection_modifyitems(session, config):
 def pytest_assertrepr_compare(config, op, left, right):
     if config.option.assert_steps:
         with pytest.raises(AssertionError):
-            with allure.step(f"{ASSERTION_FAILED_MESSAGE}: {left} {op} {right}"):
-                assert eval(f"{left}{op}{right}")
-        return [f'{left} {op} {right}', f"    {ASSERTION_FAILED_MESSAGE}!"]
+            with allure.step(f"{ASSERTION_FAILED_MESSAGE}: \"{left} {op} {right}\""):
+                assert False
+        return [f'\"{left} {op} {right}\"', f"    {ASSERTION_FAILED_MESSAGE}!"]
 
 
 def mark_tests_by_location(session, test_dir):

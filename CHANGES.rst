@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.6.1
+~~~~~
+
+* Hotfix for assertions rewriting
+
 0.6.0
 ~~~~~
 
