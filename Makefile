@@ -1,6 +1,7 @@
 clear:
 	rm -rf dist/
 	rm -rf *.egg-info
+	rm -rf .tox
 
 format:
 	black --target-version=py37 --skip-string-normalization --line-length=120 .

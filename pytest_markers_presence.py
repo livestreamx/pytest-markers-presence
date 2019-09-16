@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from typing import List
+import json
+from typing import List, Dict
 
 import warnings
 import _pytest.config
@@ -9,6 +10,7 @@ import pytest
 from _pytest.main import wrap_session
 import py
 from more_itertools import first
+from pydantic import BaseModel, Any
 
 STAGE_MARKERS_OPT = "--stage-markers"
 BDD_MARKERS_OPT = "--bdd-markers"
@@ -37,8 +39,69 @@ BDD_MARKERS_HELP = "Show not classified functions usage and items without Allure
 ASSERT_STEPS_HELP = "Represent assertion comparisons with Allure steps"
 
 ASSERTION_FAILED_MESSAGE = 'Assertion failed'
+ALLURE_MAX_STRING_LENGTH = 25
 
 CURDIR = py.path.local()
+
+
+class Issues:
+    not_classified_functions: List = []
+    no_feature_classes: List = []
+    no_story_functions: List = []
+
+    def are_exists(self):
+        return bool(self.not_classified_functions + self.no_feature_classes + self.no_story_functions)
+
+
+class AllureComparison(BaseModel):
+    op: str
+    left: Any
+    right: Any
+
+    @staticmethod
+    def is_str_longer_than_max_len(string):
+        return len(string) > ALLURE_MAX_STRING_LENGTH
+
+    @classmethod
+    def str_with_fixed_len(cls, obj):
+        string = str(obj)
+        if cls.is_str_longer_than_max_len(string):
+            return f"{string[0:ALLURE_MAX_STRING_LENGTH]}..."
+        return string
+
+    def get_allure_step_description(self):
+        return (
+            f"{ASSERTION_FAILED_MESSAGE}: \"{self.str_with_fixed_len(self.left)} {self.str_with_fixed_len(self.op)}"
+            f" {self.str_with_fixed_len(self.right)}\""
+        )
+
+    @staticmethod
+    def _attach_json(dumped, name):
+        allure.attach(dumped, name, allure.attachment_type.JSON)
+
+    @staticmethod
+    def get_json_dumps_kwargs():
+        return {"sort_keys": True, "indent": 2}
+
+    @classmethod
+    def attach_as_is(cls, obj, name):
+        if isinstance(obj, BaseModel):
+            cls._attach_json(obj.schema_json(**cls.get_json_dumps_kwargs()), name)
+        elif isinstance(obj, Dict) or isinstance(obj, List):
+            cls._attach_json(json.dumps(obj, **cls.get_json_dumps_kwargs()), name)
+        else:
+            allure.attach(str(obj), name, allure.attachment_type.TEXT)
+
+    def compile_allure_step(self):
+        with pytest.raises(AssertionError):
+            with allure.step(self.get_allure_step_description()):
+                if self.is_str_longer_than_max_len(str(self.left)) or self.is_str_longer_than_max_len(str(self.right)):
+                    self.attach_as_is(self.left, "Left")
+                    self.attach_as_is(self.right, "Right")
+                raise AssertionError
+
+    def get_pytest_assertrepr(self):
+        return [f'\"{self.left} {self.op} {self.right}\"', f"    {ASSERTION_FAILED_MESSAGE}!"]
 
 
 def pytest_addoption(parser):
@@ -72,10 +135,9 @@ def pytest_collection_modifyitems(session, config):
 
 def pytest_assertrepr_compare(config, op, left, right):
     if config.option.assert_steps:
-        with pytest.raises(AssertionError):
-            with allure.step(f"{ASSERTION_FAILED_MESSAGE}: \"{left} {op} {right}\""):
-                assert False
-        return [f'\"{left} {op} {right}\"', f"    {ASSERTION_FAILED_MESSAGE}!"]
+        comparison = AllureComparison(op=op, left=left, right=right)
+        comparison.compile_allure_step()
+        return comparison.get_pytest_assertrepr()
 
 
 def mark_tests_by_location(session, test_dir):
@@ -178,15 +240,6 @@ def get_items(session):
                 yield cls, function
             else:
                 yield None, function
-
-
-class Issues:
-    not_classified_functions: List = []
-    no_feature_classes: List = []
-    no_story_functions: List = []
-
-    def are_exists(self):
-        return bool(self.not_classified_functions + self.no_feature_classes + self.no_story_functions)
 
 
 def get_not_marked_items(session):

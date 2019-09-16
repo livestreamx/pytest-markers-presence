@@ -196,3 +196,67 @@ class TestMarkersPresenceNegative:
         result = testdir.runpytest(ASSERT_STEPS_OPT)
         result.stdout.fnmatch_lines([f"*assert False", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
+
+    def test_assert_long_strings(self, testdir):
+        testdir.makepyfile(
+            """
+            x = 'very very very long string, i can not see the end!..'
+            y = 'other very very very long string, i can not see the end again!..'
+            def test_case():
+                assert x == y
+            """
+        )
+        result = testdir.runpytest(ASSERT_STEPS_OPT)
+        result.stdout.fnmatch_lines([f"*{ASSERTION_FAILED_MESSAGE}*", "*AssertionError", "*1 failed in*"])
+        assert result.ret == pytest.ExitCode.TESTS_FAILED
+
+    @pytest.mark.parametrize("str_attr", ["tst", "very very very long string, i can not see the end!.."])
+    def test_assert_base_model(self, testdir, str_attr):
+        testdir.makepyfile(
+            """
+            from pydantic import BaseModel
+            
+            class Cls(BaseModel):
+                attr_1: int
+                attr_2: str
+                
+            x = Cls(attr_1 = 1, attr_2 = '{str}')
+            y = Cls(attr_1 = 1, attr_2 = 'err')
+            
+            def test_case():
+                assert x == y
+            """.format(
+                str=str_attr
+            )
+        )
+        result = testdir.runpytest(ASSERT_STEPS_OPT)
+        result.stdout.fnmatch_lines(
+            [
+                f"*assert \"Cls attr_1=1 attr_2='{str_attr}' == Cls attr_1=1 attr_2='err'\"",
+                f"*{ASSERTION_FAILED_MESSAGE}*",
+                "*AssertionError",
+                "*1 failed in*",
+            ]
+        )
+        assert result.ret == pytest.ExitCode.TESTS_FAILED
+
+    def test_assert_dict(self, testdir):
+        testdir.makepyfile(
+            """
+            x = {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5}
+            y = {"a": 1, "b": 2, "c": 3, "d": 4, "f": 6}
+
+            def test_case():
+                assert x == y
+            """
+        )
+        result = testdir.runpytest(ASSERT_STEPS_OPT)
+        result.stdout.fnmatch_lines(
+            [
+                "*assert \"{'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5} == {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'f': 6}\"",
+                f"*{ASSERTION_FAILED_MESSAGE}*",
+                "*AssertionError",
+                "*1 failed in*",
+            ]
+        )
+        assert result.ret == pytest.ExitCode.TESTS_FAILED
