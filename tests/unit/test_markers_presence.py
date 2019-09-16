@@ -2,6 +2,9 @@
 import pytest
 
 from pytest_markers_presence import (
+    STAGE_MARKERS_OPT,
+    BDD_MARKERS_OPT,
+    ASSERT_STEPS_OPT,
     EXIT_CODE_ERROR,
     EXIT_CODE_SUCCESS,
     CLASSES_OK_HEADLINE,
@@ -10,21 +13,12 @@ from pytest_markers_presence import (
     NO_FEATURE_CLASSES_HEADLINE,
     NO_STORY_FUNCTIONS_HEADLINE,
     UNIT_TESTS_MARKER,
+    ASSERTION_FAILED_MESSAGE,
 )
 
 
-@pytest.fixture
-def stage_option():
-    return "--stage-markers"
-
-
-@pytest.fixture
-def bdd_option():
-    return "--bdd-markers"
-
-
 class TestMarkersPresencePositive:
-    def test_stage_markers_globally(self, request, stage_option):
+    def test_stage_markers_globally(self, request):
         assert len(
             [
                 item
@@ -33,10 +27,10 @@ class TestMarkersPresencePositive:
             ]
         ) == len(
             request.session.items
-        ), f"I am sure - these tests are not marked as '{UNIT_TESTS_MARKER}' with option '{stage_option}'!"
+        ), f"I am sure - these tests are not marked as '{UNIT_TESTS_MARKER}' with option '{STAGE_MARKERS_OPT}'!"
 
-    def test_empty_stage_markers(self, testdir, stage_option):
-        """Make sure that pytest accepts '--stage-markers' fixture"""
+    def test_empty_stage_markers(self, testdir):
+        f"""Make sure that pytest accepts '{STAGE_MARKERS_OPT}' fixture"""
 
         # create a temporary pytest test module
         testdir.makepyfile(
@@ -46,13 +40,13 @@ class TestMarkersPresencePositive:
         )
 
         # run pytest with the following cmd args
-        result = testdir.runpytest(stage_option, "-v")
+        result = testdir.runpytest(STAGE_MARKERS_OPT, "-v")
 
         # make sure that that we get a '0' exit code for the testsuite
         assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
 
-    def test_empty_bdd_markers(self, testdir, bdd_option):
-        """Make sure that pytest accepts 'bdd-markers' fixture"""
+    def test_empty_assertions(self, testdir):
+        f"""Make sure that pytest accepts '{ASSERT_STEPS_OPT}' fixture"""
 
         # create a temporary pytest test module
         testdir.makepyfile(
@@ -62,7 +56,23 @@ class TestMarkersPresencePositive:
         )
 
         # run pytest with the following cmd args
-        result = testdir.runpytest(bdd_option, "-v")
+        result = testdir.runpytest(ASSERT_STEPS_OPT, "-v")
+
+        # make sure that that we get a '0' exit code for the testsuite
+        assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
+
+    def test_empty_bdd_markers(self, testdir):
+        f"""Make sure that pytest accepts '{BDD_MARKERS_OPT}' fixture"""
+
+        # create a temporary pytest test module
+        testdir.makepyfile(
+            """
+            assert True
+            """
+        )
+
+        # run pytest with the following cmd args
+        result = testdir.runpytest(BDD_MARKERS_OPT, "-v")
 
         # fnmatch_lines does an assertion internally
         result.stdout.fnmatch_lines([f"*{CLASSES_OK_HEADLINE}*", f"*{BDD_MARKED_OK_HEADLINE}*", "*no tests ran in *"])
@@ -70,20 +80,21 @@ class TestMarkersPresencePositive:
         # make sure that that we get a '0' exit code for the testsuite
         assert result.ret == EXIT_CODE_SUCCESS
 
-    def test_help_message(self, testdir, stage_option, bdd_option):
+    def test_help_message(self, testdir):
         result = testdir.runpytest("--help")
         # fnmatch_lines does an assertion internally
         result.stdout.fnmatch_lines(
             [
                 "Markers presence:*",
-                f"*{stage_option}*Stage project with markers based on directories names",
+                f"*{STAGE_MARKERS_OPT}*Stage project with markers based on directories names",
                 "*in 'tests' folder",
-                f"*{bdd_option}*Show not classified functions usage and items without",
+                f"*{BDD_MARKERS_OPT}*Show not classified functions usage and items without",
                 "*Allure BDD tags",
+                f"*{ASSERT_STEPS_OPT}*Represent assertion comparisons with Allure steps",
             ]
         )
 
-    def test_fixture_not_affected(self, testdir, bdd_option):
+    def test_fixture_not_affected(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -92,13 +103,13 @@ class TestMarkersPresencePositive:
                 return True
             """
         )
-        result = testdir.runpytest(bdd_option)
+        result = testdir.runpytest(BDD_MARKERS_OPT)
         result.stdout.fnmatch_lines([f"*{CLASSES_OK_HEADLINE}*", f"*{BDD_MARKED_OK_HEADLINE}*", "*no tests ran in *"])
         assert result.ret == EXIT_CODE_SUCCESS
 
     @pytest.mark.parametrize("framework", ["behave", "pytest_bdd"])
     @pytest.mark.parametrize("bdd_step", ["given", "when", "then"])
-    def test_bdd_step_not_affected(self, testdir, bdd_option, framework, bdd_step):
+    def test_bdd_step_not_affected(self, testdir, framework, bdd_step):
         testdir.makepyfile(
             """
             import pytest
@@ -110,13 +121,13 @@ class TestMarkersPresencePositive:
                 package=framework, step=bdd_step
             )
         )
-        result = testdir.runpytest(bdd_option)
+        result = testdir.runpytest(BDD_MARKERS_OPT)
         result.stdout.fnmatch_lines([f"*{CLASSES_OK_HEADLINE}*", f"*{BDD_MARKED_OK_HEADLINE}*", "*no tests ran in *"])
         assert result.ret == EXIT_CODE_SUCCESS
 
 
 class TestMarkersPresenceNegative:
-    def test_bdd_markers_simple(self, testdir, bdd_option):
+    def test_bdd_markers_simple(self, testdir):
         """Make sure that pytest fails session with our fixtures."""
 
         testdir.makepyfile(
@@ -126,7 +137,7 @@ class TestMarkersPresenceNegative:
                     assert True
             """
         )
-        result = testdir.runpytest(bdd_option)
+        result = testdir.runpytest(BDD_MARKERS_OPT)
         result.stdout.fnmatch_lines(
             [
                 f"*{NO_FEATURE_CLASSES_HEADLINE}*",
@@ -138,16 +149,16 @@ class TestMarkersPresenceNegative:
         )
         assert result.ret == EXIT_CODE_ERROR
 
-    def test_markers_without_class(self, testdir, bdd_option):
+    def test_markers_without_class(self, testdir):
         """Make sure that pytest fails session with our fixtures."""
 
         testdir.makepyfile(
             """
-            def test_case(self):
+            def test_case():
                 assert True
             """
         )
-        result = testdir.runpytest(bdd_option)
+        result = testdir.runpytest(BDD_MARKERS_OPT)
         result.stdout.fnmatch_lines(
             [
                 f"*{NOT_CLASSIFIED_FUNCTIONS_HEADLINE}*",
@@ -157,3 +168,31 @@ class TestMarkersPresenceNegative:
             ]
         )
         assert result.ret == EXIT_CODE_ERROR
+
+    def test_complex_assert(self, testdir):
+        """Make sure that pytest fails session with our fixtures."""
+
+        testdir.makepyfile(
+            """
+            x = 1
+            y = 2
+            def test_case():
+                assert x == y
+            """
+        )
+        result = testdir.runpytest(ASSERT_STEPS_OPT)
+        result.stdout.fnmatch_lines(
+            [f"*assert 1 == 2", f"*{ASSERTION_FAILED_MESSAGE}*", "*AssertionError", "*1 failed in*"]
+        )
+        assert result.ret == pytest.ExitCode.TESTS_FAILED
+
+    def test_assert_false(self, testdir):
+        testdir.makepyfile(
+            """
+            def test_case():
+                assert False
+            """
+        )
+        result = testdir.runpytest(ASSERT_STEPS_OPT)
+        result.stdout.fnmatch_lines([f"*assert False", "*AssertionError", "*1 failed in*"])
+        assert result.ret == pytest.ExitCode.TESTS_FAILED

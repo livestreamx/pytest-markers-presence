@@ -18,8 +18,8 @@ pytest-markers-presence
     :target: https://ci.appveyor.com/project/livestreamx/pytest-markers-presence/branch/master
     :alt: See Build Status on AppVeyor
 
-A simple plugin to detect missed `PyTest`_ tags and `Allure`_ BDD markers.
-Make the repository with your tests more structured and beautiful.
+A simple plugin for easy staging your Python3 project's structure of `PyTest`_ tests.
+Make the repository with your tests more structured and beautiful with `Allure`_ ideology.
 
 ----
 
@@ -28,7 +28,8 @@ Features
 
 * Dynamical tests marking based on 'tests' subfolders
 * List not classified functions
-* List missed Allure BDD tags for traditional test classes and functions (exclude fixtures and other incompatible objects)
+* List missed Allure BDD tags for test classes and functions (exclude fixtures and other incompatible objects)
+* Simple assertions rewriting with Allure steps
 
 
 Installation
@@ -44,13 +45,18 @@ Usage
 
 The `--stage-markers` option is compatible with simple pytest run loop and could be used for dynamical tests marking.
 
+The `--assert-steps` option is compatible with simple pytest run loop and could be used for assertions rewriting with
+Allure steps.
+
 The `--bdd-markers` option will not run your tests and it's also sensible for errors in the pytest
 collection step. If you are using as part of you CI process the recommended way is to run it after the default test run.
 For example:
 
     script:
       - pytest
-      - pytest --stage-markers
+
+      - pytest --stage-markers --assert-steps
+
       - pytest --bdd-markers
 
 
