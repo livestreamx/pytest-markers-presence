@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+0.6.2
+~~~~~
+
+* Updated assertions rewriting: implemented smart Allure step compilation with attachments
+* Updated tests
+
 0.6.1
 ~~~~~
 
