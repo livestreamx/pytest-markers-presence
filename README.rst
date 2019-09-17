@@ -29,7 +29,11 @@ Features
 * Dynamical tests marking based on 'tests' subfolders
 * List not classified functions
 * List missed Allure BDD tags for test classes and functions (exclude fixtures and other incompatible objects)
-* Simple assertions rewriting with Allure steps
+* Assertions rewriting with Allure steps including attachments for complex objects:
+    - Pydantic BaseModels
+    - dictionaries
+    - lists
+    - long strings.
 
 
 Installation
