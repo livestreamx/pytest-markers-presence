@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.6.3
+~~~~~
+
+* Hotfix for Allure step compilation
+
 0.6.2
 ~~~~~
 

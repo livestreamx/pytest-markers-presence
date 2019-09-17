@@ -86,8 +86,8 @@ class AllureComparison(BaseModel):
     @classmethod
     def attach_as_is(cls, obj, name):
         if isinstance(obj, BaseModel):
-            cls._attach_json(obj.schema_json(**cls.get_json_dumps_kwargs()), name)
-        elif isinstance(obj, Dict) or isinstance(obj, List):
+            cls._attach_json(obj.json(**cls.get_json_dumps_kwargs()), name)
+        elif isinstance(obj, (Dict, List)):
             cls._attach_json(json.dumps(obj, **cls.get_json_dumps_kwargs()), name)
         else:
             allure.attach(str(obj), name, allure.attachment_type.TEXT)
