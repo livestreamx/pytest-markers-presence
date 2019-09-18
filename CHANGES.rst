@@ -1,6 +1,13 @@
 Changelog
 ---------
 
+0.7.0
+~~~~~
+
+* Implemented Allure titles setting for BDD tests
+* Updated tests
+* Minor changes
+
 0.6.3
 ~~~~~
 
@@ -27,9 +34,9 @@ Changelog
 0.5.0
 ~~~~~
 
-* Implemented new logic for '--stage-markers' option
+* Implemented new logic for '--staging' option
 * Implemented support for dynamical tests marking
-* Updated '--bdd-markers' logic
+* Updated '--bdd-format' logic
 * Updated tests
 
 0.4.0
