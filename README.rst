@@ -29,6 +29,7 @@ Features
 * Dynamical tests marking based on 'tests' subfolders
 * List not classified functions
 * List missed Allure BDD tags for test classes and functions (exclude fixtures and other incompatible objects)
+* Setting Allure titles for BDD tests
 * Assertions rewriting with Allure steps including attachments for complex objects:
     - Pydantic BaseModels
     - dictionaries
@@ -47,26 +48,29 @@ You can install "pytest-markers-presence" via `pip`_ from `PyPI`_::
 Usage
 -----
 
-The `--stage-markers` option is compatible with simple pytest run loop and could be used for dynamical tests marking.
+The `--staging` option is compatible with simple pytest run loop and could be used for dynamical tests marking.
 
 The `--assert-steps` option is compatible with simple pytest run loop and could be used for assertions rewriting with
 Allure steps.
 
-The `--bdd-markers` option will not run your tests and it's also sensible for errors in the pytest
+The `--bdd-titles` option is compatible with simple pytest run loop and could be used for assertions rewriting with
+Allure steps.
+
+The `--bdd-format` option will not run your tests and it's also sensible for errors in the pytest
 collection step. If you are using as part of you CI process the recommended way is to run it after the default test run.
 For example:
 
     script:
       - pytest
 
-      - pytest --stage-markers --assert-steps
+      - pytest --staging --assert-steps --bdd-titles
 
-      - pytest --bdd-markers
+      - pytest --bdd-format
 
 
 Example of 'pytest' run with provided options:
 
-    $ pytest tests --stage-markers
+    $ pytest tests --staging --assert-steps --bdd-titles
 
     ======================= test session starts =======================
 
@@ -74,7 +78,7 @@ Example of 'pytest' run with provided options:
 
     ==================== 1 passed in 0.51 seconds =====================
 
-    $ pytest --bdd-markers
+    $ pytest --bdd-format
 
     ======================= test session starts =======================
 
