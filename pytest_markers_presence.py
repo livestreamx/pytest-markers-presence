@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
-from typing import List, Dict
+from typing import List
 
 import warnings
 import _pytest.config
@@ -87,7 +87,7 @@ class AllureComparison(BaseModel):
     def attach_as_is(cls, obj, name):
         if isinstance(obj, BaseModel):
             cls._attach_json(obj.json(**cls.get_json_dumps_kwargs()), name)
-        elif isinstance(obj, (Dict, List)):
+        elif isinstance(obj, (dict, list)):
             cls._attach_json(json.dumps(obj, **cls.get_json_dumps_kwargs()), name)
         else:
             allure.attach(str(obj), name, allure.attachment_type.TEXT)
