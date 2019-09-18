@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+from dataclasses import asdict
 from typing import List
 
 import warnings
@@ -11,6 +12,7 @@ from _pytest.main import wrap_session
 import py
 from more_itertools import first
 from pydantic import BaseModel, Any
+from pydantic.dataclasses import dataclass
 
 STAGE_MARKERS_OPT = "--stage-markers"
 BDD_MARKERS_OPT = "--bdd-markers"
@@ -53,6 +55,16 @@ class Issues:
         return bool(self.not_classified_functions + self.no_feature_classes + self.no_story_functions)
 
 
+@dataclass(frozen=True)
+class JSONDumpsKwargs:
+    sort_keys: bool = True
+    indent: int = 4
+    ensure_ascii: bool = False
+
+
+JSON_DUMPS_KWARGS = asdict(JSONDumpsKwargs())
+
+
 class AllureComparison(BaseModel):
     op: str
     left: Any
@@ -79,16 +91,12 @@ class AllureComparison(BaseModel):
     def _attach_json(dumped, name):
         allure.attach(dumped, name, allure.attachment_type.JSON)
 
-    @staticmethod
-    def get_json_dumps_kwargs():
-        return {"sort_keys": True, "indent": 2}
-
     @classmethod
     def attach_as_is(cls, obj, name):
         if isinstance(obj, BaseModel):
-            cls._attach_json(obj.json(**cls.get_json_dumps_kwargs()), name)
+            cls._attach_json(obj.json(**JSON_DUMPS_KWARGS), name)
         elif isinstance(obj, (dict, list)):
-            cls._attach_json(json.dumps(obj, **cls.get_json_dumps_kwargs()), name)
+            cls._attach_json(json.dumps(obj, **JSON_DUMPS_KWARGS), name)
         else:
             allure.attach(str(obj), name, allure.attachment_type.TEXT)
 
