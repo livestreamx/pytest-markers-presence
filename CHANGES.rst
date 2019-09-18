@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.7.1
+~~~~~
+
+* Tagged again (pypi package broken)
+
 0.7.0
 ~~~~~
 
