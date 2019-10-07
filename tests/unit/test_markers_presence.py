@@ -98,7 +98,7 @@ class TestMarkersPresencePositive:
         # fnmatch_lines does an assertion internally
         result.stdout.fnmatch_lines(
             [
-                "Markers presence:*",
+                "*Markers presence:*",
                 f"*{Options.STAGING}*Stage project with markers based on directories names",
                 f"*{Options.ASSERT_STEPS}*Represent assertion comparisons with Allure steps",
                 f"*{Options.BDD_TITLES}*Set Allure titles for BDD test scenarios",
