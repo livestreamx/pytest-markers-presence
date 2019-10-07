@@ -99,11 +99,10 @@ class TestMarkersPresencePositive:
         result.stdout.fnmatch_lines(
             [
                 "Markers presence:*",
-                f"*{Options.STAGING}*Stage project with markers based on directories names",
-                f"*{Options.ASSERT_STEPS}*Represent assertion comparisons with Allure steps",
-                f"*{Options.BDD_TITLES}*Set Allure titles for BDD test scenarios",
-                f"*{Options.BDD_FORMAT}*Show not classified functions usage and items without",
-                "*Allure BDD tags",
+                f"*{Options.STAGING}*Stage project with markers based on directories names*",
+                f"*{Options.ASSERT_STEPS}*Represent assertion comparisons with Allure steps*",
+                f"*{Options.BDD_TITLES}*Set Allure titles for BDD test scenarios*",
+                f"*{Options.BDD_FORMAT}*Show not classified functions usage*",
             ]
         )
 
