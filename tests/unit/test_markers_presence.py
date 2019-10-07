@@ -274,3 +274,37 @@ class TestMarkersPresenceNegative:
             ]
         )
         assert result.ret == pytest.ExitCode.TESTS_FAILED
+
+    @pytest.mark.parametrize("str_attr", ["tst", "very very very long string, i can not see the end!.."])
+    def test_assert_dataclass(self, testdir, str_attr):
+        testdir.makepyfile(
+            """
+            from pydantic.dataclasses import dataclass
+            
+            @dataclass
+            class Cls1:
+                attr_1: str = 'err'
+                
+            @dataclass
+            class Cls2:
+                attr_2: str = "{str}"
+
+            x = Cls1()
+            y = Cls2()
+
+            def test_case():
+                assert x == y
+            """.format(
+                str=str_attr
+            )
+        )
+        result = testdir.runpytest(Options.ASSERT_STEPS)
+        result.stdout.fnmatch_lines(
+            [
+                f"*assert \"Cls1(attr_1='err') == Cls2(attr_2='{str_attr}')\"",
+                f"*{ASSERTION_FAILED_MESSAGE}*",
+                "*AssertionError",
+                "*1 failed in*",
+            ]
+        )
+        assert result.ret == pytest.ExitCode.TESTS_FAILED

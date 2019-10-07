@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import enum
 import json
-from dataclasses import asdict
+from dataclasses import asdict, is_dataclass
 from typing import List
 
 import warnings
@@ -205,17 +205,26 @@ class AllureComparison(BaseModel):
         )
 
     @staticmethod
-    def _attach_json(dumped, name):
-        allure.attach(dumped, name, allure.attachment_type.JSON)
+    def dump_to_json(obj):
+        return json.dumps(obj, **JSON_DUMPS_KWARGS)
+
+    @classmethod
+    def extract_recursively(cls, obj: Any) -> str:
+        if isinstance(obj, BaseModel):
+            return obj.json(**JSON_DUMPS_KWARGS)
+        elif is_dataclass(obj):
+            return cls.dump_to_json(asdict(obj))
+        elif isinstance(obj, (dict, list)):
+            if isinstance(obj, dict):
+                return cls.dump_to_json({key: cls.extract_recursively(value) for key, value in obj.items()})
+            if isinstance(obj, list):
+                return cls.dump_to_json([cls.extract_recursively(item) for item in obj])
+        else:
+            return str(obj)
 
     @classmethod
     def attach_as_is(cls, obj, name):
-        if isinstance(obj, BaseModel):
-            cls._attach_json(obj.json(**JSON_DUMPS_KWARGS), name)
-        elif isinstance(obj, (dict, list)):
-            cls._attach_json(json.dumps(obj, **JSON_DUMPS_KWARGS), name)
-        else:
-            allure.attach(str(obj), name, allure.attachment_type.TEXT)
+        allure.attach(cls.extract_recursively(obj), name, allure.attachment_type.JSON)
 
     def compile_allure_step(self):
         with pytest.raises(AssertionError):
