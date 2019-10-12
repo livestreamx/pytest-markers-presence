@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+0.7.3
+~~~~~
+
+* No assertions rewriting for built-in types
+* Updated tests
+
 0.7.2
 ~~~~~
 
