@@ -86,7 +86,16 @@ def pytest_assertrepr_compare(config, op, left, right):
     if config.option.assert_steps:
         comparison = AllureComparison(op=op, left=left, right=right)
         comparison.compile_allure_step()
-        return comparison.get_pytest_assertrepr()
+
+        if is_repr_assert_for_objects(left, right):
+            return comparison.get_pytest_assertrepr()
+
+
+def is_repr_assert_for_objects(*args):
+    for obj in args:
+        if isinstance(obj, (int, float, str, list, dict)):
+            return False
+    return True
 
 
 def write_classes(tw, classes):

@@ -193,9 +193,7 @@ class TestMarkersPresenceNegative:
             """
         )
         result = testdir.runpytest(Options.ASSERT_STEPS)
-        result.stdout.fnmatch_lines(
-            [f"*assert \"1 == 2\"", f"*{ASSERTION_FAILED_MESSAGE}*", "*AssertionError", "*1 failed in*"]
-        )
+        result.stdout.fnmatch_lines([f"*assert 1 == 2", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
     def test_assert_false(self, testdir):
@@ -209,17 +207,28 @@ class TestMarkersPresenceNegative:
         result.stdout.fnmatch_lines([f"*assert False", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
-    def test_assert_long_strings(self, testdir):
+    @pytest.mark.parametrize(
+        ("str_x, str_y"),
+        [
+            (
+                'very very very long string, i can not see the end!..',
+                'other very very very long string, i can not see the end again!..',
+            )
+        ],
+    )
+    def test_assert_long_strings(self, testdir, str_x, str_y):
         testdir.makepyfile(
             """
-            x = 'very very very long string, i can not see the end!..'
-            y = 'other very very very long string, i can not see the end again!..'
+            x = '{str_x}'
+            y = '{str_y}'
             def test_case():
                 assert x == y
-            """
+            """.format(
+                str_x=str_x, str_y=str_y
+            )
         )
         result = testdir.runpytest(Options.ASSERT_STEPS)
-        result.stdout.fnmatch_lines([f"*{ASSERTION_FAILED_MESSAGE}*", "*AssertionError", "*1 failed in*"])
+        result.stdout.fnmatch_lines([f"*- {str_x}*", f"*+ {str_y}*", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
     @pytest.mark.parametrize("str_attr", ["tst", "very very very long string, i can not see the end!.."])
@@ -263,14 +272,7 @@ class TestMarkersPresenceNegative:
             """
         )
         result = testdir.runpytest(Options.ASSERT_STEPS)
-        result.stdout.fnmatch_lines(
-            [
-                "*assert \"{'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5} == {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'f': 6}\"",
-                f"*{ASSERTION_FAILED_MESSAGE}*",
-                "*AssertionError",
-                "*1 failed in*",
-            ]
-        )
+        result.stdout.fnmatch_lines([f"*Omitting 4 identical items*", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
     @pytest.mark.parametrize("str_attr", ["tst", "very very very long string, i can not see the end!.."])
