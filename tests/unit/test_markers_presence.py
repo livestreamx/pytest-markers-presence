@@ -103,6 +103,7 @@ class TestMarkersPresencePositive:
                 f"*{Options.ASSERT_STEPS}*Represent assertion comparisons with Allure steps*",
                 f"*{Options.BDD_TITLES}*Set Allure titles for BDD test scenarios*",
                 f"*{Options.BDD_FORMAT}*Show not classified functions usage*",
+                f"*{Options.WARNINGS}*Enable warnings for staging*",
             ]
         )
 
