@@ -49,6 +49,7 @@ Usage
 -----
 
 The `--staging` option is compatible with simple pytest run loop and could be used for dynamical tests marking.
+The `--staging-warnings` option just enables warnings for `--staging` option.
 
 The `--assert-steps` option is compatible with simple pytest run loop and could be used for assertions rewriting with
 Allure steps.

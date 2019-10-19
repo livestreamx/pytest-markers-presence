@@ -24,6 +24,8 @@ class Options(str, enum.Enum):
     BDD_TITLES = "--bdd-titles"
     # linter
     BDD_FORMAT = "--bdd-format"
+    # warnings enabling
+    WARNINGS = "--staging-warnings"
 
 
 class ExitCodes(int, enum.Enum):
@@ -50,6 +52,7 @@ STAGING_HELP = f"Stage project with markers based on directories names in '{CORR
 ASSERT_STEPS_HELP = "Represent assertion comparisons with Allure steps"
 BDD_TITLES_HELP = "Set Allure titles for BDD test scenarios"
 BDD_FORMAT_HELP = "Show not classified functions usage and items without Allure BDD tags"
+STAGING_WARNINGS = "Enable warnings for staging"
 
 ASSERTION_FAILED_MESSAGE = 'Assertion failed'
 ALLURE_MAX_STRING_LENGTH = 25
@@ -65,6 +68,9 @@ def pytest_addoption(parser):
     )
     group.addoption(Options.BDD_TITLES, action="store_true", dest="bdd_titles", default=False, help=BDD_TITLES_HELP)
     group.addoption(Options.BDD_FORMAT, action="store_true", dest="bdd_markers", default=False, help=BDD_FORMAT_HELP)
+    group.addoption(
+        Options.WARNINGS, action="store_true", dest="staging_warnings", default=False, help=STAGING_WARNINGS
+    )
 
 
 def pytest_cmdline_main(config):
@@ -77,7 +83,7 @@ def pytest_cmdline_main(config):
 
 def pytest_collection_modifyitems(session, config):
     if config.option.stage_markers:
-        mark_tests_by_location(session)
+        mark_tests_by_location(session, config)
     if config.option.bdd_titles:
         set_bdd_titles_if_necessary(session)
 
@@ -258,38 +264,43 @@ def get_not_marked_items(session):
     return issues
 
 
-def mark_tests_by_location(session):
+def mark_tests_by_location(session, config):
     try:
         test_dir = first(CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN)))
     except ValueError:
-        warnings.warn(f"Could not find folder '{CORRECT_TESTS_FOLDER_PATTERN}' in '{CURDIR.strpath}'!", UserWarning)
+        if config.option.staging_warnings:
+            warnings.warn(f"Could not find folder '{CORRECT_TESTS_FOLDER_PATTERN}' in '{CURDIR.strpath}'!", UserWarning)
         return
 
     staging_markers = [d.basename for d in test_dir.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch('[!__]*'))]
     if not staging_markers:
-        warnings.warn(
-            f"No one subfolder was found in '{test_dir.basename}' folder, so test markers had not been generated!",
-            UserWarning,
-        )
+        if config.option.staging_warnings:
+            warnings.warn(
+                f"No one subfolder was found in '{test_dir.basename}' folder, so test markers had not been generated!",
+                UserWarning,
+            )
         return
-    if len(staging_markers) < MIN_TESTS_SUBFOLDERS_NUM:
-        warnings.warn(
-            f"You should have at least {MIN_TESTS_SUBFOLDERS_NUM} directories for tests to make staging better.",
-            UserWarning,
-        )
-    if UNIT_TESTS_MARKER not in to_upper_case(staging_markers):
-        warnings.warn(f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning)
+
+    if config.option.staging_warnings:
+        if len(staging_markers) < MIN_TESTS_SUBFOLDERS_NUM:
+            warnings.warn(
+                f"You should have at least {MIN_TESTS_SUBFOLDERS_NUM} directories for tests to make staging better.",
+                UserWarning,
+            )
+        if UNIT_TESTS_MARKER not in to_upper_case(staging_markers):
+            warnings.warn(f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning)
 
     for item in get_valid_session_items(session):
         try:
             marker = next(m for m in staging_markers if test_dir.join(m).strpath in item.fspath.strpath)
         except StopIteration:
-            warnings.warn(
-                f"Could not add item for test function '{get_function_name(item)}'! Please, place your function "
-                f"into {CORRECT_TESTS_FOLDER_PATTERN} folder and create directories (for example, 'unit') for "
-                f"tests classification.",
-                UserWarning,
-            )
+            if config.option.staging_warnings:
+                warnings.warn(
+                    f"Could not add item for test function '{get_function_name(item)}'! Please, place your function "
+                    f"into {CORRECT_TESTS_FOLDER_PATTERN} folder and create directories (for example, 'unit') for "
+                    f"tests classification.",
+                    UserWarning,
+                )
             continue
         item.add_marker(marker)
 
