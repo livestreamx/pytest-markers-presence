@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+0.7.4
+~~~~~
+
+* Add option '--staging-warnings' to external enabling of warnings
+* Updated tests
+
 0.7.3
 ~~~~~
 
