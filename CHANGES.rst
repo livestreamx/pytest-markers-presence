@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+0.7.5
+~~~~~
+
+* Added support for not traditional pytest items (for example, YamlItem)
+* Updated tests
+
 0.7.4
 ~~~~~
 
