@@ -2,7 +2,7 @@
 import enum
 import json
 from dataclasses import asdict, is_dataclass
-from typing import List
+from typing import List, Any
 
 import warnings
 import _pytest.config
@@ -13,7 +13,7 @@ from _pytest.main import wrap_session
 import py
 from _pytest.mark import Mark
 from more_itertools import first
-from pydantic import BaseModel, Any
+from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
 
@@ -145,7 +145,7 @@ def is_checking_failed(config, session):
 def get_items(session):
     seen_classes = {None}
     seen_functions = {None}
-    for function in get_valid_session_items(session):
+    for function in session.items:
         func_name = get_function_name(function)
         if func_name not in seen_functions:
             seen_functions.add(func_name)
@@ -164,18 +164,9 @@ def get_function_name(func):
     If the function was not parametrized, it has simple name.
     Plugin shows only simple name for fast debug and trouble shooting.
     """
-    if func.originalname:
+    if hasattr(func, 'originalname') and func.originalname:
         return func.originalname
     return func.name
-
-
-def get_valid_session_items(session):
-    """
-    Function that return only session items with attribute 'originalname'.
-    It is necessary in case of different pytest plugins those provide incompatible
-    logical constructions, for example Tavern framework.
-    """
-    return [item for item in session.items if hasattr(item, 'originalname')]
 
 
 class Issues:
@@ -290,7 +281,7 @@ def mark_tests_by_location(session, config):
         if UNIT_TESTS_MARKER not in to_upper_case(staging_markers):
             warnings.warn(f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning)
 
-    for item in get_valid_session_items(session):
+    for item in session.items:
         try:
             marker = next(m for m in staging_markers if test_dir.join(m).strpath in item.fspath.strpath)
         except StopIteration:
@@ -342,7 +333,7 @@ def is_parent_excluded(func):
 
 
 def set_bdd_titles_if_necessary(session):
-    for item in get_valid_session_items(session):
+    for item in session.items:
         if hasattr(item, "_obj") and hasattr(item._obj, "__scenario__"):
             item.own_markers.append(
                 Mark(name="allure_display_name", args=(f"{item._obj.__scenario__.name}",), kwargs={})

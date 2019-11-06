@@ -254,7 +254,7 @@ class TestMarkersPresenceNegative:
         result = testdir.runpytest(Options.ASSERT_STEPS)
         result.stdout.fnmatch_lines(
             [
-                f"*assert \"Cls attr_1=1 attr_2='{str_attr}' == Cls attr_1=1 attr_2='err'\"",
+                f"*assert \"attr_1=1 attr_2='{str_attr}' == attr_1=1 attr_2='err'\"",
                 f"*{ASSERTION_FAILED_MESSAGE}*",
                 "*AssertionError",
                 "*1 failed in*",
