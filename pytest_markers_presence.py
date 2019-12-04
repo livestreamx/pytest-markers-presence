@@ -219,7 +219,7 @@ class AllureComparison(BaseModel):
         if isinstance(obj, BaseModel):
             return obj.json(**JSON_DUMPS_KWARGS)
         elif is_dataclass(obj):
-            return cls.dump_to_json(asdict(obj))
+            return cls.extract_recursively({key: cls.extract_recursively(value) for key, value in asdict(obj).items()})
         elif isinstance(obj, (dict, list)):
             if isinstance(obj, dict):
                 return cls.dump_to_json({key: cls.extract_recursively(value) for key, value in obj.items()})
