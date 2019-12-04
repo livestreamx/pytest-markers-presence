@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.7.6
+~~~~~
+
+* Fix for dataclasses objects extraction
+
 0.7.5
 ~~~~~
 
