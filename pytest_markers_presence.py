@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
 import enum
 import json
-from dataclasses import asdict, is_dataclass
-from typing import List, Any
-
 import warnings
 import _pytest.config
 import _pytest.python
 import allure
 import pytest
-from _pytest.main import wrap_session
 import py
+
 from _pytest.mark import Mark
+from _pytest.main import wrap_session
 from more_itertools import first
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
+from dataclasses import asdict, is_dataclass
+from typing import List, Any, Optional
+from pytest_bdd.feature import Scenario
+from pathlib import Path
 
 
 class Options(str, enum.Enum):
@@ -26,6 +28,8 @@ class Options(str, enum.Enum):
     BDD_FORMAT = "--bdd-format"
     # warnings enabling
     WARNINGS = "--staging-warnings"
+    ISSUE_URL = "--issue-url"
+    ISSUE_KEYWORD = "--issue-keyword"
 
 
 class ExitCodes(int, enum.Enum):
@@ -52,10 +56,14 @@ STAGING_HELP = f"Stage project with markers based on directories names in '{CORR
 ASSERT_STEPS_HELP = "Represent assertion comparisons with Allure steps"
 BDD_TITLES_HELP = "Set Allure titles for BDD test scenarios"
 BDD_FORMAT_HELP = "Show not classified functions usage and items without Allure BDD tags"
-STAGING_WARNINGS = "Enable warnings for staging"
+STAGING_WARNINGS_HELP = "Enable warnings for staging"
+ISSUE_LINKS_HELP = "Specify URL for found issue links attachment"
+ISSUE_KEYWORD_HELP = "Specify special issue keyword (against 'Issue links') for links searching"
 
 ASSERTION_FAILED_MESSAGE = 'Assertion failed'
 ALLURE_MAX_STRING_LENGTH = 25
+
+ISSUE_LINKS_DEFAULT_KEYWORD = 'Issue links'
 
 CURDIR = py.path.local()
 
@@ -69,7 +77,13 @@ def pytest_addoption(parser):
     group.addoption(Options.BDD_TITLES, action="store_true", dest="bdd_titles", default=False, help=BDD_TITLES_HELP)
     group.addoption(Options.BDD_FORMAT, action="store_true", dest="bdd_markers", default=False, help=BDD_FORMAT_HELP)
     group.addoption(
-        Options.WARNINGS, action="store_true", dest="staging_warnings", default=False, help=STAGING_WARNINGS
+        Options.WARNINGS, action="store_true", dest="staging_warnings", default=False, help=STAGING_WARNINGS_HELP
+    )
+    group.addoption(
+        Options.ISSUE_URL, action="store", dest="issue_url", default=None, help=ISSUE_LINKS_HELP
+    )
+    group.addoption(
+        Options.ISSUE_KEYWORD, action="store", dest="issue_keyword", default=None, help=ISSUE_KEYWORD_HELP
     )
 
 
@@ -84,8 +98,21 @@ def pytest_cmdline_main(config):
 def pytest_collection_modifyitems(session, config):
     if config.option.stage_markers:
         mark_tests_by_location(session, config)
-    if config.option.bdd_titles:
-        set_bdd_titles_if_necessary(session)
+    if config.option.bdd_titles or config.option.issue_url:
+        set_bdd_options(session, config)
+
+
+def is_pytest_bdd_item(item) -> bool:
+    return hasattr(item, "_obj") and hasattr(item._obj, "__scenario__") and isinstance(item._obj.__scenario__, Scenario)
+
+
+@pytest.hookimpl
+def pytest_runtest_teardown(item) -> None:
+    """ Hook for issue links attachment. """
+    issue_url = item.config.getoption('issue_url')
+    if issue_url and is_pytest_bdd_item(item) and hasattr(item._obj.__scenario__.feature, 'links'):
+        for link in item._obj.__scenario__.feature.links:
+            allure.dynamic.link(url=f"{issue_url.rstrip('/')}/browse/{link}", name=link)
 
 
 def pytest_assertrepr_compare(config, op, left, right):
@@ -244,6 +271,16 @@ class AllureComparison(BaseModel):
         return [f'\"{self.left} {self.op} {self.right}\"', f"    {ASSERTION_FAILED_MESSAGE}!"]
 
 
+def get_issue_links(item, keyword: str) -> Optional[List[str]]:
+    with Path(item._obj.__scenario__.feature.filename).open() as file:
+        for line in file:
+            if keyword not in line:
+                continue
+            links_part = line.split(keyword)[-1]
+            return [x.strip() for x in links_part.split(',')]
+    return None
+
+
 def get_not_marked_items(session):
     issues = Issues()
     for cls, func in get_items(session):
@@ -332,9 +369,19 @@ def is_parent_excluded(func):
     return parent and detect_excluded_markers(parent)
 
 
-def set_bdd_titles_if_necessary(session):
+def set_bdd_options(session, config) -> None:
+    keyword = ISSUE_LINKS_DEFAULT_KEYWORD
+    if config.option.issue_keyword:
+        keyword = config.option.issue_keyword
+    keyword += ":"
     for item in session.items:
-        if hasattr(item, "_obj") and hasattr(item._obj, "__scenario__"):
+        if not is_pytest_bdd_item(item):
+            continue
+        if config.option.bdd_titles:
             item.own_markers.append(
                 Mark(name="allure_display_name", args=(f"{item._obj.__scenario__.name}",), kwargs={})
             )
+        if config.option.issue_url:
+            links = get_issue_links(item, keyword)
+            if links:
+                setattr(item._obj.__scenario__.feature, 'links', links)
