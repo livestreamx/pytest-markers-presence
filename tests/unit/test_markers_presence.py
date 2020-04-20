@@ -229,7 +229,7 @@ class TestMarkersPresenceNegative:
             )
         )
         result = testdir.runpytest(Options.ASSERT_STEPS)
-        result.stdout.fnmatch_lines([f"*- {str_x}*", f"*+ {str_y}*", "*AssertionError", "*1 failed in*"])
+        result.stdout.fnmatch_lines([f"*- {str_y}*", f"*+ {str_x}*", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
     @pytest.mark.parametrize("str_attr", ["tst", "very very very long string, i can not see the end!.."])
