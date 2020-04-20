@@ -166,7 +166,7 @@ def pytest_runtest_teardown(item) -> None:
     ):
         for link in item._obj.__scenario__.feature.links:
             allure.dynamic.link(
-                url=f"{browse_url.rstrip('/')}/browse/{link}", name=link
+                url=f"{browse_url.rstrip('/')}/{link}", name=link
             )
 
 
