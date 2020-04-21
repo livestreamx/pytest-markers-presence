@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
 import enum
 import json
-from dataclasses import asdict, is_dataclass
-from typing import List, Any
-
 import warnings
+from dataclasses import asdict, is_dataclass
+from pathlib import Path
+from typing import Any, List, Optional
+
 import _pytest.config
 import _pytest.python
 import allure
+import py
 import pytest
 from _pytest.main import wrap_session
-import py
 from _pytest.mark import Mark
 from more_itertools import first
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
+from pytest_bdd.feature import Scenario
 
 
 class Options(str, enum.Enum):
@@ -26,6 +28,9 @@ class Options(str, enum.Enum):
     BDD_FORMAT = "--bdd-format"
     # warnings enabling
     WARNINGS = "--staging-warnings"
+    # links
+    BROWSE_URL = "--browse-url"
+    LINKS_KEYWORD = "--links-keyword"
 
 
 class ExitCodes(int, enum.Enum):
@@ -41,35 +46,89 @@ BDD_CHECKING_EXCLUDED_MARKERS = ["BEHAVE", "BEHAVIOR", "BDD", "PRESENCE_IGNORE"]
 ALLURE_FEATURE_TAG = "feature"
 ALLURE_STORY_TAG = "story"
 
-NOT_CLASSIFIED_FUNCTIONS_HEADLINE = "You should create test class(es) for your test function(s):"
+NOT_CLASSIFIED_FUNCTIONS_HEADLINE = (
+    "You should create test class(es) for your test function(s):"
+)
 CLASSES_OK_HEADLINE = "Cool, every function is classified."
 
-NO_FEATURE_CLASSES_HEADLINE = "You should set BDD tag '@allure.feature' for your test class(es):"
-NO_STORY_FUNCTIONS_HEADLINE = "You should set BDD tag '@allure.story' for your test function(s):"
-BDD_MARKED_OK_HEADLINE = "Cool, every test class with its functions is marked with BDD tags."
+NO_FEATURE_CLASSES_HEADLINE = (
+    "You should set BDD tag '@allure.feature' for your test class(es):"
+)
+NO_STORY_FUNCTIONS_HEADLINE = (
+    "You should set BDD tag '@allure.story' for your test function(s):"
+)
+BDD_MARKED_OK_HEADLINE = (
+    "Cool, every test class with its functions is marked with BDD tags."
+)
 
 STAGING_HELP = f"Stage project with markers based on directories names in '{CORRECT_TESTS_FOLDER_PATTERN}' folder"
 ASSERT_STEPS_HELP = "Represent assertion comparisons with Allure steps"
 BDD_TITLES_HELP = "Set Allure titles for BDD test scenarios"
-BDD_FORMAT_HELP = "Show not classified functions usage and items without Allure BDD tags"
-STAGING_WARNINGS = "Enable warnings for staging"
+BDD_FORMAT_HELP = (
+    "Show not classified functions usage and items without Allure BDD tags"
+)
+STAGING_WARNINGS_HELP = "Enable warnings for staging"
 
-ASSERTION_FAILED_MESSAGE = 'Assertion failed'
+ASSERTION_FAILED_MESSAGE = "Assertion failed"
 ALLURE_MAX_STRING_LENGTH = 25
+
+BROWSE_URL_HELP = "Specify your task tracker URL for attachment of found issue links"
+LINKS_KEYWORD_HELP = "Specify your issue keyword for links searching"
+LINKS_DEFAULT_KEYWORD = "Tracker links"
 
 CURDIR = py.path.local()
 
 
 def pytest_addoption(parser):
-    group = parser.getgroup("markers-presence", 'Markers presence')
-    group.addoption(Options.STAGING, action="store_true", dest="stage_markers", default=False, help=STAGING_HELP)
+    group = parser.getgroup("markers-presence", "Markers presence")
     group.addoption(
-        Options.ASSERT_STEPS, action="store_true", dest="assert_steps", default=False, help=ASSERT_STEPS_HELP
+        Options.STAGING,
+        action="store_true",
+        dest="stage_markers",
+        default=False,
+        help=STAGING_HELP,
     )
-    group.addoption(Options.BDD_TITLES, action="store_true", dest="bdd_titles", default=False, help=BDD_TITLES_HELP)
-    group.addoption(Options.BDD_FORMAT, action="store_true", dest="bdd_markers", default=False, help=BDD_FORMAT_HELP)
     group.addoption(
-        Options.WARNINGS, action="store_true", dest="staging_warnings", default=False, help=STAGING_WARNINGS
+        Options.ASSERT_STEPS,
+        action="store_true",
+        dest="assert_steps",
+        default=False,
+        help=ASSERT_STEPS_HELP,
+    )
+    group.addoption(
+        Options.BDD_TITLES,
+        action="store_true",
+        dest="bdd_titles",
+        default=False,
+        help=BDD_TITLES_HELP,
+    )
+    group.addoption(
+        Options.BDD_FORMAT,
+        action="store_true",
+        dest="bdd_markers",
+        default=False,
+        help=BDD_FORMAT_HELP,
+    )
+    group.addoption(
+        Options.WARNINGS,
+        action="store_true",
+        dest="staging_warnings",
+        default=False,
+        help=STAGING_WARNINGS_HELP,
+    )
+    group.addoption(
+        Options.BROWSE_URL.value,
+        action="store",
+        dest="browse_url",
+        default=None,
+        help=BROWSE_URL_HELP,
+    )
+    group.addoption(
+        Options.LINKS_KEYWORD.value,
+        action="store",
+        dest="links_keyword",
+        default=None,
+        help=LINKS_KEYWORD_HELP,
     )
 
 
@@ -84,8 +143,31 @@ def pytest_cmdline_main(config):
 def pytest_collection_modifyitems(session, config):
     if config.option.stage_markers:
         mark_tests_by_location(session, config)
-    if config.option.bdd_titles:
-        set_bdd_titles_if_necessary(session)
+    if config.option.bdd_titles or config.option.browse_url:
+        set_bdd_options(session, config)
+
+
+def is_pytest_bdd_item(item) -> bool:
+    return (
+        hasattr(item, "_obj")
+        and hasattr(item._obj, "__scenario__")
+        and isinstance(item._obj.__scenario__, Scenario)
+    )
+
+
+@pytest.hookimpl
+def pytest_runtest_teardown(item) -> None:
+    """ Hook for issue links attachment. """
+    browse_url = item.config.getoption("browse_url")
+    if (
+        browse_url
+        and is_pytest_bdd_item(item)
+        and hasattr(item._obj.__scenario__.feature, "links")
+    ):
+        for link in item._obj.__scenario__.feature.links:
+            allure.dynamic.link(
+                url=f"{browse_url.rstrip('/')}/{link}", name=link
+            )
 
 
 def pytest_assertrepr_compare(config, op, left, right):
@@ -113,7 +195,11 @@ def write_classes(tw, classes):
 def write_functions(tw, functions):
     for function in functions:
         tplt = "Test function: '{}', location: {}"
-        tw.line(tplt.format(get_function_name(function), CURDIR.bestrelpath(function.fspath)))
+        tw.line(
+            tplt.format(
+                get_function_name(function), CURDIR.bestrelpath(function.fspath)
+            )
+        )
 
 
 def is_checking_failed(config, session):
@@ -164,7 +250,7 @@ def get_function_name(func):
     If the function was not parametrized, it has simple name.
     Plugin shows only simple name for fast debug and trouble shooting.
     """
-    if hasattr(func, 'originalname') and func.originalname:
+    if hasattr(func, "originalname") and func.originalname:
         return func.originalname
     return func.name
 
@@ -175,7 +261,11 @@ class Issues:
     no_story_functions: List = []
 
     def are_exists(self):
-        return bool(self.not_classified_functions + self.no_feature_classes + self.no_story_functions)
+        return bool(
+            self.not_classified_functions
+            + self.no_feature_classes
+            + self.no_story_functions
+        )
 
 
 @dataclass(frozen=True)
@@ -206,8 +296,8 @@ class AllureComparison(BaseModel):
 
     def get_allure_step_description(self):
         return (
-            f"{ASSERTION_FAILED_MESSAGE}: \"{self.str_with_fixed_len(self.left)} {self.str_with_fixed_len(self.op)}"
-            f" {self.str_with_fixed_len(self.right)}\""
+            f'{ASSERTION_FAILED_MESSAGE}: "{self.str_with_fixed_len(self.left)} {self.str_with_fixed_len(self.op)}'
+            f' {self.str_with_fixed_len(self.right)}"'
         )
 
     @staticmethod
@@ -219,10 +309,17 @@ class AllureComparison(BaseModel):
         if isinstance(obj, BaseModel):
             return obj.json(**JSON_DUMPS_KWARGS)
         elif is_dataclass(obj):
-            return cls.extract_recursively({key: cls.extract_recursively(value) for key, value in asdict(obj).items()})
+            return cls.extract_recursively(
+                {
+                    key: cls.extract_recursively(value)
+                    for key, value in asdict(obj).items()
+                }
+            )
         elif isinstance(obj, (dict, list)):
             if isinstance(obj, dict):
-                return cls.dump_to_json({key: cls.extract_recursively(value) for key, value in obj.items()})
+                return cls.dump_to_json(
+                    {key: cls.extract_recursively(value) for key, value in obj.items()}
+                )
             if isinstance(obj, list):
                 return cls.dump_to_json([cls.extract_recursively(item) for item in obj])
         else:
@@ -235,13 +332,28 @@ class AllureComparison(BaseModel):
     def compile_allure_step(self):
         with pytest.raises(AssertionError):
             with allure.step(self.get_allure_step_description()):
-                if self.is_str_longer_than_max_len(str(self.left)) or self.is_str_longer_than_max_len(str(self.right)):
+                if self.is_str_longer_than_max_len(
+                    str(self.left)
+                ) or self.is_str_longer_than_max_len(str(self.right)):
                     self.attach_as_is(self.left, "Left")
                     self.attach_as_is(self.right, "Right")
                 raise AssertionError
 
     def get_pytest_assertrepr(self):
-        return [f'\"{self.left} {self.op} {self.right}\"', f"    {ASSERTION_FAILED_MESSAGE}!"]
+        return [
+            f'"{self.left} {self.op} {self.right}"',
+            f"    {ASSERTION_FAILED_MESSAGE}!",
+        ]
+
+
+def get_issue_links(item, keyword: str) -> Optional[List[str]]:
+    with Path(item._obj.__scenario__.feature.filename).open() as file:
+        for line in file:
+            if keyword not in line:
+                continue
+            links_part = line.split(keyword)[-1]
+            return [x.strip() for x in links_part.split(",")]
+    return None
 
 
 def get_not_marked_items(session):
@@ -257,13 +369,26 @@ def get_not_marked_items(session):
 
 def mark_tests_by_location(session, config):
     try:
-        test_dir = first(CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN)))
+        test_dir = first(
+            CURDIR.listdir(
+                fil=lambda x: x.check(dir=True)
+                and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN)
+            )
+        )
     except ValueError:
         if config.option.staging_warnings:
-            warnings.warn(f"Could not find folder '{CORRECT_TESTS_FOLDER_PATTERN}' in '{CURDIR.strpath}'!", UserWarning)
+            warnings.warn(
+                f"Could not find folder '{CORRECT_TESTS_FOLDER_PATTERN}' in '{CURDIR.strpath}'!",
+                UserWarning,
+            )
         return
 
-    staging_markers = [d.basename for d in test_dir.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch('[!__]*'))]
+    staging_markers = [
+        d.basename
+        for d in test_dir.listdir(
+            fil=lambda x: x.check(dir=True) and x.fnmatch("[!__]*")
+        )
+    ]
     if not staging_markers:
         if config.option.staging_warnings:
             warnings.warn(
@@ -279,11 +404,18 @@ def mark_tests_by_location(session, config):
                 UserWarning,
             )
         if UNIT_TESTS_MARKER not in to_upper_case(staging_markers):
-            warnings.warn(f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning)
+            warnings.warn(
+                f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.",
+                UserWarning,
+            )
 
     for item in session.items:
         try:
-            marker = next(m for m in staging_markers if test_dir.join(m).strpath in item.fspath.strpath)
+            marker = next(
+                m
+                for m in staging_markers
+                if test_dir.join(m).strpath in item.fspath.strpath
+            )
         except StopIteration:
             if config.option.staging_warnings:
                 warnings.warn(
@@ -305,7 +437,9 @@ def get_item_markers_names(item):
 
 
 def detect_excluded_markers(item):
-    return set(to_upper_case(get_item_markers_names(item))) & set(BDD_CHECKING_EXCLUDED_MARKERS)
+    return set(to_upper_case(get_item_markers_names(item))) & set(
+        BDD_CHECKING_EXCLUDED_MARKERS
+    )
 
 
 def is_allure_marker_with_label(marker, label):
@@ -318,12 +452,16 @@ def include_if_function_without_class(func, lst):
 
 
 def include_if_class_without_feature(cls, lst):
-    if not [m for m in cls.own_markers if is_allure_marker_with_label(m, ALLURE_FEATURE_TAG)]:
+    if not [
+        m for m in cls.own_markers if is_allure_marker_with_label(m, ALLURE_FEATURE_TAG)
+    ]:
         lst.append(cls)
 
 
 def include_if_function_without_story(func, lst):
-    if not [m for m in func.own_markers if is_allure_marker_with_label(m, ALLURE_STORY_TAG)]:
+    if not [
+        m for m in func.own_markers if is_allure_marker_with_label(m, ALLURE_STORY_TAG)
+    ]:
         lst.append(func)
 
 
@@ -332,9 +470,23 @@ def is_parent_excluded(func):
     return parent and detect_excluded_markers(parent)
 
 
-def set_bdd_titles_if_necessary(session):
+def set_bdd_options(session, config) -> None:
+    keyword = LINKS_DEFAULT_KEYWORD
+    if config.option.links_keyword:
+        keyword = config.option.links_keyword
+    keyword += ":"
     for item in session.items:
-        if hasattr(item, "_obj") and hasattr(item._obj, "__scenario__"):
+        if not is_pytest_bdd_item(item):
+            continue
+        if config.option.bdd_titles:
             item.own_markers.append(
-                Mark(name="allure_display_name", args=(f"{item._obj.__scenario__.name}",), kwargs={})
+                Mark(
+                    name="allure_display_name",
+                    args=(f"{item._obj.__scenario__.name}",),
+                    kwargs={},
+                )
             )
+        if config.option.browse_url:
+            links = get_issue_links(item, keyword)
+            if links:
+                setattr(item._obj.__scenario__.feature, "links", links)
