@@ -19,22 +19,23 @@ pytest-markers-presence
     :alt: See Build Status on AppVeyor
 
 A simple plugin for easy staging your Python3 project's structure of `PyTest`_ tests.
-Make the repository with your tests more structured and beautiful with `Allure`_ ideology.
+Make the repository with your tests structured with `Allure`_ ideology.
 
-----
-
+--------
 Features
 --------
 
 * Dynamical tests marking based on 'tests' subfolders
 * List not classified functions
 * List missed Allure BDD tags for test classes and functions (exclude fixtures and other incompatible objects)
-* Setting Allure titles for BDD tests
 * Assertions rewriting with Allure steps including attachments for complex objects:
     - Pydantic BaseModels
     - dictionaries
     - lists
     - long strings.
+* Setting Allure titles for BDD tests based on 'Scenario' information
+* Task tracker URL specification for ticket links compiling
+* Collecting of task tracker tickets with specified keyword
 
 
 Installation
@@ -54,8 +55,13 @@ The `--staging-warnings` option just enables warnings for `--staging` option.
 The `--assert-steps` option is compatible with simple pytest run loop and could be used for assertions rewriting with
 Allure steps.
 
-The `--bdd-titles` option is compatible with simple pytest run loop and could be used for assertions rewriting with
-Allure steps.
+The `--bdd-titles` option is compatible with simple pytest run loop and could be used for setting Allure titles for BDD
+tests based on 'Scenario' information.
+
+The `--browse-url=BROWSE_URL` option is compatible with simple pytest run loop and could be used for task tracker URL
+specification for ticket links compiling.
+The `--links-keyword=LINKS_KEYWORD` option just helps to collect task tracker tickets with specified keyword
+(default value is `Tracker links`).
 
 The `--bdd-format` option will not run your tests and it's also sensible for errors in the pytest
 collection step. If you are using as part of you CI process the recommended way is to run it after the default test run.
@@ -67,6 +73,9 @@ For example:
       - pytest --staging --assert-steps --bdd-titles
 
       - pytest --bdd-format
+
+      - pytest --browse-url=https://my-jira.com/browse --links-keyword="My links"
+
 
 
 Example of 'pytest' run with provided options:

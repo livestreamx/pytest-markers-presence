@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+0.8.0
+~~~~~
+
+* Added task tracker URL specification for ticket links compiling
+* Added specification of keyword for task tracker tickets collecting
+
 0.7.6
 ~~~~~
 
