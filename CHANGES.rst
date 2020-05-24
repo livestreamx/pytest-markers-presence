@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.9.0
+~~~~~
+
+* Added enabling of fail exitcode setting when all session tests were skipped
+
 0.8.0
 ~~~~~
 

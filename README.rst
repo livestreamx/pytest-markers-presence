@@ -68,7 +68,7 @@ The `--bdd-format` option will not run your tests and it's also sensible for err
 collection step. If you are using as part of you CI process the recommended way is to run it after the default test run.
 
 The `--all-skipped-fail` option is compatible is simple pytest run loop
-and could be used for enabling fail exitcode setting when all session
+and could be used for enabling of fail exitcode setting when all session
 tests were skipped.
 
 For example:
