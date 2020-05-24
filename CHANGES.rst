@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.9.1
+~~~~~
+
+* Hotfix for plugin
+
 0.9.0
 ~~~~~
 
