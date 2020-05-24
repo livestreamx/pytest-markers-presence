@@ -31,10 +31,12 @@ class Options(str, enum.Enum):
     # links
     BROWSE_URL = "--browse-url"
     LINKS_KEYWORD = "--links-keyword"
+    # skipped
+    FAIL_ON_ALL_SKIPPED = "--all-skipped-fail"
 
 
 class ExitCodes(int, enum.Enum):
-    SUCCESS = 0
+    SUCCESS = pytest.ExitCode.OK.value
     ERROR = 11
 
 
@@ -75,6 +77,9 @@ ALLURE_MAX_STRING_LENGTH = 25
 BROWSE_URL_HELP = "Specify your task tracker URL for attachment of found issue links"
 LINKS_KEYWORD_HELP = "Specify your issue keyword for links searching"
 LINKS_DEFAULT_KEYWORD = "Tracker links"
+
+FAIL_ON_ALL_SKIPPED_HELP = "Enable setting of fail exitcode when all session tests were skipped"
+FAIL_ON_ALL_SKIPPED_HEADLINE = "Changed exitcode to FAILED because all tests were skipped."
 
 CURDIR = py.path.local()
 
@@ -130,6 +135,13 @@ def pytest_addoption(parser):
         default=None,
         help=LINKS_KEYWORD_HELP,
     )
+    group.addoption(
+        Options.FAIL_ON_ALL_SKIPPED,
+        action="store_true",
+        dest="all_skipped_fail",
+        default=False,
+        help=FAIL_ON_ALL_SKIPPED_HELP,
+    )
 
 
 def pytest_cmdline_main(config):
@@ -170,6 +182,22 @@ def pytest_runtest_teardown(item) -> None:
             )
 
 
+@pytest.hookimpl
+def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:
+    if (
+        config.option.all_skipped_fail and
+        exitstatus == 0 and
+        terminalreporter._session.testscollected > 0
+    ):
+        skipped_tests = terminalreporter.stats.get('skipped')
+        if skipped_tests and len(skipped_tests) == terminalreporter._session.testscollected:
+            terminalreporter._session.exitstatus = pytest.ExitCode.TESTS_FAILED
+            tw = _pytest.config.create_terminal_writer(config)
+            tw.line()
+            tw.line(FAIL_ON_ALL_SKIPPED_HEADLINE, red=True)
+
+
+@pytest.hookimpl
 def pytest_assertrepr_compare(config, op, left, right):
     if config.option.assert_steps:
         comparison = AllureComparison(op=op, left=left, right=right)
@@ -490,3 +518,6 @@ def set_bdd_options(session, config) -> None:
             links = get_issue_links(item, keyword)
             if links:
                 setattr(item._obj.__scenario__.feature, "links", links)
+
+
+

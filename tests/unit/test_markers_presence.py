@@ -17,7 +17,7 @@ from pytest_markers_presence import (
     STAGING_WARNINGS_HELP,
     UNIT_TESTS_MARKER,
     ExitCodes,
-    Options,
+    Options, FAIL_ON_ALL_SKIPPED_HELP,
 )
 
 _DEFAULT_HELP_CHECKING_LENGTH = 40
@@ -37,14 +37,12 @@ class TestMarkersPresencePositive:
 
     def test_empty_stage_markers(self, testdir):
         f"""Make sure that pytest accepts '{Options.STAGING}' fixture"""
-
         # create a temporary pytest test module
         testdir.makepyfile(
             """
             assert True
             """
         )
-
         # run pytest with the following cmd args
         result = testdir.runpytest(Options.STAGING, "-v")
 
@@ -136,6 +134,16 @@ class TestMarkersPresencePositive:
         # make sure that that we get a '0' exit code for the testsuite
         assert result.ret == ExitCodes.SUCCESS
 
+    def test_empty_fail_on_all_skipped(self, testdir):
+        f"""Make sure that pytest accepts '{Options.FAIL_ON_ALL_SKIPPED}' fixture"""
+        testdir.makepyfile(
+            """
+            assert True
+            """
+        )
+        result = testdir.runpytest(Options.FAIL_ON_ALL_SKIPPED, "-v")
+        assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
+
     def test_help_message(self, testdir):
         result = testdir.runpytest("--help")
         # fnmatch_lines does an assertion internally
@@ -151,6 +159,7 @@ class TestMarkersPresencePositive:
                 f"*{BROWSE_URL_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.LINKS_KEYWORD}*",
                 f"*{LINKS_KEYWORD_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
+                f"*{Options.FAIL_ON_ALL_SKIPPED}*{FAIL_ON_ALL_SKIPPED_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*"
             ]
         )
 
@@ -379,4 +388,34 @@ class TestMarkersPresenceNegative:
                 "*1 failed in*",
             ]
         )
+        assert result.ret == pytest.ExitCode.TESTS_FAILED
+
+    @pytest.mark.parametrize(
+        ('str_bool', 'exit_code'),
+        [
+            ("True", pytest.ExitCode.OK),
+            ("False", pytest.ExitCode.TESTS_FAILED),
+        ]
+    )
+    def test_fail_on_all_skipped_when_no_skip(self, testdir, str_bool, exit_code):
+        testdir.makepyfile(
+            (
+                """
+                def test_case():
+                    assert {str_bool}
+                """
+            ).format(str_bool=str_bool)
+        )
+        result = testdir.runpytest(Options.FAIL_ON_ALL_SKIPPED, "-v")
+        assert result.ret == exit_code
+
+    def test_fail_on_all_skipped_when_skip(self, testdir):
+        testdir.makepyfile(
+            """
+            import pytest
+            def test_case():
+                pytest.skip('kek')
+            """
+        )
+        result = testdir.runpytest(Options.FAIL_ON_ALL_SKIPPED, "-v")
         assert result.ret == pytest.ExitCode.TESTS_FAILED
