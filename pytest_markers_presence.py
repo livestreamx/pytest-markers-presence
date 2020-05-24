@@ -36,7 +36,8 @@ class Options(str, enum.Enum):
 
 
 class ExitCodes(int, enum.Enum):
-    SUCCESS = pytest.ExitCode.OK.value
+    SUCCESS = 0
+    FAILED = 1
     ERROR = 11
 
 
@@ -139,7 +140,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:
     if config.option.all_skipped_fail and exitstatus == 0 and terminalreporter._session.testscollected > 0:
         skipped_tests = terminalreporter.stats.get('skipped')
         if skipped_tests and len(skipped_tests) == terminalreporter._session.testscollected:
-            terminalreporter._session.exitstatus = pytest.ExitCode.TESTS_FAILED
+            terminalreporter._session.exitstatus = ExitCodes.FAILED
             tw = _pytest.config.create_terminal_writer(config)
             tw.line()
             tw.line(FAIL_ON_ALL_SKIPPED_HEADLINE, red=True)
