@@ -36,6 +36,7 @@ Features
 * Setting Allure titles for BDD tests based on 'Scenario' information
 * Task tracker URL specification for ticket links compiling
 * Collecting of task tracker tickets with specified keyword
+* Enable setting of fail exitcode when all session tests were skipped
 
 
 Installation
@@ -65,20 +66,26 @@ The `--links-keyword=LINKS_KEYWORD` option just helps to collect task tracker ti
 
 The `--bdd-format` option will not run your tests and it's also sensible for errors in the pytest
 collection step. If you are using as part of you CI process the recommended way is to run it after the default test run.
+
+The `--all-skipped-fail` option is compatible is simple pytest run loop
+and could be used for enabling fail exitcode setting when all session
+tests were skipped.
+
 For example:
 
     script:
       - pytest
 
-      - pytest --staging --assert-steps --bdd-titles
+      - pytest --staging --bdd-titles --all-skipped-fail
+
+      - pytest --assert-steps
 
       - pytest --bdd-format
 
       - pytest --browse-url=https://my-jira.com/browse --links-keyword="My links"
 
 
-
-Example of 'pytest' run with provided options:
+Examples of 'pytest' run with provided options:
 
     $ pytest tests --staging --assert-steps --bdd-titles
 
@@ -87,6 +94,8 @@ Example of 'pytest' run with provided options:
     (hidden for brevity)
 
     ==================== 1 passed in 0.51 seconds =====================
+
+
 
     $ pytest --bdd-format
 
@@ -104,6 +113,18 @@ Example of 'pytest' run with provided options:
     Test function: 'test_case', location: /path/to/file.py
 
     ================== no tests ran in 0.00 seconds ===================
+
+    $ pytest --all-skipped-fail
+
+    ======================= test session starts =======================
+
+    (hidden for brevity)
+
+    test_fail_on_all_skipped_when_skip.py::test_case SKIPPED                 [100%]
+
+    Changed exitcode to FAILED because all tests were skipped.
+
+    ======================== 1 skipped in 0.01s =======================
 
 
 Contributing
