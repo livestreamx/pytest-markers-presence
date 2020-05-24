@@ -17,7 +17,8 @@ from pytest_markers_presence import (
     STAGING_WARNINGS_HELP,
     UNIT_TESTS_MARKER,
     ExitCodes,
-    Options, FAIL_ON_ALL_SKIPPED_HELP,
+    Options,
+    FAIL_ON_ALL_SKIPPED_HELP,
 )
 
 _DEFAULT_HELP_CHECKING_LENGTH = 40
@@ -124,11 +125,7 @@ class TestMarkersPresencePositive:
 
         # fnmatch_lines does an assertion internally
         result.stdout.fnmatch_lines(
-            [
-                f"*{CLASSES_OK_HEADLINE}*",
-                f"*{BDD_MARKED_OK_HEADLINE}*",
-                "*no tests ran in *",
-            ]
+            [f"*{CLASSES_OK_HEADLINE}*", f"*{BDD_MARKED_OK_HEADLINE}*", "*no tests ran in *",]
         )
 
         # make sure that that we get a '0' exit code for the testsuite
@@ -159,7 +156,7 @@ class TestMarkersPresencePositive:
                 f"*{BROWSE_URL_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.LINKS_KEYWORD}*",
                 f"*{LINKS_KEYWORD_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
-                f"*{Options.FAIL_ON_ALL_SKIPPED}*{FAIL_ON_ALL_SKIPPED_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*"
+                f"*{Options.FAIL_ON_ALL_SKIPPED}*{FAIL_ON_ALL_SKIPPED_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
             ]
         )
 
@@ -174,11 +171,7 @@ class TestMarkersPresencePositive:
         )
         result = testdir.runpytest(Options.BDD_FORMAT)
         result.stdout.fnmatch_lines(
-            [
-                f"*{CLASSES_OK_HEADLINE}*",
-                f"*{BDD_MARKED_OK_HEADLINE}*",
-                "*no tests ran in *",
-            ]
+            [f"*{CLASSES_OK_HEADLINE}*", f"*{BDD_MARKED_OK_HEADLINE}*", "*no tests ran in *",]
         )
         assert result.ret == ExitCodes.SUCCESS
 
@@ -198,11 +191,7 @@ class TestMarkersPresencePositive:
         )
         result = testdir.runpytest(Options.BDD_FORMAT)
         result.stdout.fnmatch_lines(
-            [
-                f"*{CLASSES_OK_HEADLINE}*",
-                f"*{BDD_MARKED_OK_HEADLINE}*",
-                "*no tests ran in *",
-            ]
+            [f"*{CLASSES_OK_HEADLINE}*", f"*{BDD_MARKED_OK_HEADLINE}*", "*no tests ran in *",]
         )
         assert result.ret == ExitCodes.SUCCESS
 
@@ -262,9 +251,7 @@ class TestMarkersPresenceNegative:
             """
         )
         result = testdir.runpytest(Options.ASSERT_STEPS)
-        result.stdout.fnmatch_lines(
-            [f"*assert 1 == 2", "*AssertionError", "*1 failed in*"]
-        )
+        result.stdout.fnmatch_lines([f"*assert 1 == 2", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
     def test_assert_false(self, testdir):
@@ -275,9 +262,7 @@ class TestMarkersPresenceNegative:
             """
         )
         result = testdir.runpytest(Options.ASSERT_STEPS)
-        result.stdout.fnmatch_lines(
-            [f"*assert False", "*AssertionError", "*1 failed in*"]
-        )
+        result.stdout.fnmatch_lines([f"*assert False", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
     @pytest.mark.parametrize(
@@ -301,14 +286,10 @@ class TestMarkersPresenceNegative:
             )
         )
         result = testdir.runpytest(Options.ASSERT_STEPS)
-        result.stdout.fnmatch_lines(
-            [f"*- {str_y}*", f"*+ {str_x}*", "*AssertionError", "*1 failed in*"]
-        )
+        result.stdout.fnmatch_lines([f"*- {str_y}*", f"*+ {str_x}*", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
-    @pytest.mark.parametrize(
-        "str_attr", ["tst", "very very very long string, i can not see the end!.."]
-    )
+    @pytest.mark.parametrize("str_attr", ["tst", "very very very long string, i can not see the end!.."])
     def test_assert_base_model(self, testdir, str_attr):
         testdir.makepyfile(
             """
@@ -349,14 +330,10 @@ class TestMarkersPresenceNegative:
             """
         )
         result = testdir.runpytest(Options.ASSERT_STEPS)
-        result.stdout.fnmatch_lines(
-            [f"*Omitting 4 identical items*", "*AssertionError", "*1 failed in*"]
-        )
+        result.stdout.fnmatch_lines([f"*Omitting 4 identical items*", "*AssertionError", "*1 failed in*"])
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
-    @pytest.mark.parametrize(
-        "str_attr", ["tst", "very very very long string, i can not see the end!.."]
-    )
+    @pytest.mark.parametrize("str_attr", ["tst", "very very very long string, i can not see the end!.."])
     def test_assert_dataclass(self, testdir, str_attr):
         testdir.makepyfile(
             """
@@ -391,11 +368,7 @@ class TestMarkersPresenceNegative:
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
     @pytest.mark.parametrize(
-        ('str_bool', 'exit_code'),
-        [
-            ("True", pytest.ExitCode.OK),
-            ("False", pytest.ExitCode.TESTS_FAILED),
-        ]
+        ('str_bool', 'exit_code'), [("True", pytest.ExitCode.OK), ("False", pytest.ExitCode.TESTS_FAILED),]
     )
     def test_fail_on_all_skipped_when_no_skip(self, testdir, str_bool, exit_code):
         testdir.makepyfile(
