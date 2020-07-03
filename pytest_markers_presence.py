@@ -73,6 +73,7 @@ FAIL_ON_ALL_SKIPPED_HELP = "Enable setting of fail exitcode when all session tes
 FAIL_ON_ALL_SKIPPED_HEADLINE = "Changed exitcode to FAILED because all tests were skipped."
 
 CURDIR = py.path.local()
+_DIR_SUPPORTED_PATTERNS = ["[!__]*", "[!.]*"]
 
 
 def pytest_addoption(parser):
@@ -138,7 +139,7 @@ def pytest_runtest_teardown(item) -> None:
 @pytest.hookimpl
 def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:
     if config.option.all_skipped_fail and exitstatus == 0 and terminalreporter._session.testscollected > 0:
-        skipped_tests = terminalreporter.stats.get('skipped')
+        skipped_tests = terminalreporter.stats.get("skipped")
         if skipped_tests and len(skipped_tests) == terminalreporter._session.testscollected:
             terminalreporter._session.exitstatus = ExitCodes.FAILED
             tw = _pytest.config.create_terminal_writer(config)
@@ -327,7 +328,15 @@ def get_not_marked_items(session):
     return issues
 
 
-def mark_tests_by_location(session, config):
+def _is_suitable_dir(name: str) -> bool:
+    for pattern in _DIR_SUPPORTED_PATTERNS:
+        if name.fnmatch(pattern):
+            continue
+        return False
+    return True
+
+
+def mark_tests_by_location(session, config) -> None:
     try:
         test_dir = first(CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN)))
     except ValueError:
@@ -337,7 +346,7 @@ def mark_tests_by_location(session, config):
             )
         return
 
-    staging_markers = [d.basename for d in test_dir.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch("[!__]*"))]
+    staging_markers = [d.basename for d in test_dir.listdir(fil=lambda x: x.check(dir=True) and _is_suitable_dir(x))]
     if not staging_markers:
         if config.option.staging_warnings:
             warnings.warn(

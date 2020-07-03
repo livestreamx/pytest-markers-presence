@@ -9,6 +9,7 @@ from pytest_markers_presence import (
     BDD_TITLES_HELP,
     BROWSE_URL_HELP,
     CLASSES_OK_HEADLINE,
+    FAIL_ON_ALL_SKIPPED_HELP,
     LINKS_KEYWORD_HELP,
     NO_FEATURE_CLASSES_HEADLINE,
     NO_STORY_FUNCTIONS_HEADLINE,
@@ -18,7 +19,6 @@ from pytest_markers_presence import (
     UNIT_TESTS_MARKER,
     ExitCodes,
     Options,
-    FAIL_ON_ALL_SKIPPED_HELP,
 )
 
 _DEFAULT_HELP_CHECKING_LENGTH = 40
@@ -368,7 +368,7 @@ class TestMarkersPresenceNegative:
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
     @pytest.mark.parametrize(
-        ('str_bool', 'exit_code'), [("True", pytest.ExitCode.OK), ("False", pytest.ExitCode.TESTS_FAILED),]
+        ("str_bool", "exit_code"), [("True", pytest.ExitCode.OK), ("False", pytest.ExitCode.TESTS_FAILED)],
     )
     def test_fail_on_all_skipped_when_no_skip(self, testdir, str_bool, exit_code):
         testdir.makepyfile(
