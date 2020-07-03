@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.9.2
+~~~~~
+
+* Updated directory supported patterns for dynamic pytest mark: excluded directories with names like ".*".
+
 0.9.1
 ~~~~~
 
