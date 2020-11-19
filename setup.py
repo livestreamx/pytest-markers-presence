@@ -56,7 +56,12 @@ setup(
     long_description=read("README.rst"),
     py_modules=["pytest_markers_presence"],
     python_requires=">=3.7",
-    install_requires=["pytest>=3.5", "allure-pytest>=2.7", "pydantic>=0.32", "pytest-bdd>=3.2",],
+    install_requires=[
+        "pytest>=6.0",
+        "allure-pytest>=2.8.19",
+        "pydantic>=1.2",
+        "pytest-bdd>=4.0",
+    ],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Framework :: Pytest",

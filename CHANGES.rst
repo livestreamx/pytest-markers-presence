@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.10.0
+~~~~~~
+
+* Updated libraries versions
+
 0.9.2
 ~~~~~
 

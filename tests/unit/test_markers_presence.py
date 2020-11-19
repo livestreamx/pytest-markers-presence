@@ -125,7 +125,11 @@ class TestMarkersPresencePositive:
 
         # fnmatch_lines does an assertion internally
         result.stdout.fnmatch_lines(
-            [f"*{CLASSES_OK_HEADLINE}*", f"*{BDD_MARKED_OK_HEADLINE}*", "*no tests ran in *",]
+            [
+                f"*{CLASSES_OK_HEADLINE}*",
+                f"*{BDD_MARKED_OK_HEADLINE}*",
+                "*no tests ran in *",
+            ]
         )
 
         # make sure that that we get a '0' exit code for the testsuite
@@ -171,7 +175,11 @@ class TestMarkersPresencePositive:
         )
         result = testdir.runpytest(Options.BDD_FORMAT)
         result.stdout.fnmatch_lines(
-            [f"*{CLASSES_OK_HEADLINE}*", f"*{BDD_MARKED_OK_HEADLINE}*", "*no tests ran in *",]
+            [
+                f"*{CLASSES_OK_HEADLINE}*",
+                f"*{BDD_MARKED_OK_HEADLINE}*",
+                "*no tests ran in *",
+            ]
         )
         assert result.ret == ExitCodes.SUCCESS
 
@@ -191,7 +199,11 @@ class TestMarkersPresencePositive:
         )
         result = testdir.runpytest(Options.BDD_FORMAT)
         result.stdout.fnmatch_lines(
-            [f"*{CLASSES_OK_HEADLINE}*", f"*{BDD_MARKED_OK_HEADLINE}*", "*no tests ran in *",]
+            [
+                f"*{CLASSES_OK_HEADLINE}*",
+                f"*{BDD_MARKED_OK_HEADLINE}*",
+                "*no tests ran in *",
+            ]
         )
         assert result.ret == ExitCodes.SUCCESS
 
@@ -368,7 +380,8 @@ class TestMarkersPresenceNegative:
         assert result.ret == pytest.ExitCode.TESTS_FAILED
 
     @pytest.mark.parametrize(
-        ("str_bool", "exit_code"), [("True", pytest.ExitCode.OK), ("False", pytest.ExitCode.TESTS_FAILED)],
+        ("str_bool", "exit_code"),
+        [("True", pytest.ExitCode.OK), ("False", pytest.ExitCode.TESTS_FAILED)],
     )
     def test_fail_on_all_skipped_when_no_skip(self, testdir, str_bool, exit_code):
         testdir.makepyfile(
