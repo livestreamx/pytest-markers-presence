@@ -13,7 +13,6 @@ import py
 import pytest
 from _pytest.main import wrap_session
 from _pytest.mark import Mark
-from more_itertools import first
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 from pytest_bdd.feature import Scenario
@@ -338,8 +337,8 @@ def _is_suitable_dir(name: str) -> bool:
 
 def mark_tests_by_location(session, config) -> None:
     try:
-        test_dir = first(CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN)))
-    except ValueError:
+        test_dir = next(iter(CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN))))
+    except StopIteration:
         if config.option.staging_warnings:
             warnings.warn(
                 f"Could not find folder '{CORRECT_TESTS_FOLDER_PATTERN}' in '{CURDIR.strpath}'!", UserWarning,
