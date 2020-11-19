@@ -78,25 +78,53 @@ _DIR_SUPPORTED_PATTERNS = ["[!__]*", "[!.]*"]
 def pytest_addoption(parser):
     group = parser.getgroup("markers-presence", "Markers presence")
     group.addoption(
-        Options.STAGING, action="store_true", dest="stage_markers", default=False, help=STAGING_HELP,
+        Options.STAGING,
+        action="store_true",
+        dest="stage_markers",
+        default=False,
+        help=STAGING_HELP,
     )
     group.addoption(
-        Options.ASSERT_STEPS, action="store_true", dest="assert_steps", default=False, help=ASSERT_STEPS_HELP,
+        Options.ASSERT_STEPS,
+        action="store_true",
+        dest="assert_steps",
+        default=False,
+        help=ASSERT_STEPS_HELP,
     )
     group.addoption(
-        Options.BDD_TITLES, action="store_true", dest="bdd_titles", default=False, help=BDD_TITLES_HELP,
+        Options.BDD_TITLES,
+        action="store_true",
+        dest="bdd_titles",
+        default=False,
+        help=BDD_TITLES_HELP,
     )
     group.addoption(
-        Options.BDD_FORMAT, action="store_true", dest="bdd_markers", default=False, help=BDD_FORMAT_HELP,
+        Options.BDD_FORMAT,
+        action="store_true",
+        dest="bdd_markers",
+        default=False,
+        help=BDD_FORMAT_HELP,
     )
     group.addoption(
-        Options.WARNINGS, action="store_true", dest="staging_warnings", default=False, help=STAGING_WARNINGS_HELP,
+        Options.WARNINGS,
+        action="store_true",
+        dest="staging_warnings",
+        default=False,
+        help=STAGING_WARNINGS_HELP,
     )
     group.addoption(
-        Options.BROWSE_URL.value, action="store", dest="browse_url", default=None, help=BROWSE_URL_HELP,
+        Options.BROWSE_URL.value,
+        action="store",
+        dest="browse_url",
+        default=None,
+        help=BROWSE_URL_HELP,
     )
     group.addoption(
-        Options.LINKS_KEYWORD.value, action="store", dest="links_keyword", default=None, help=LINKS_KEYWORD_HELP,
+        Options.LINKS_KEYWORD.value,
+        action="store",
+        dest="links_keyword",
+        default=None,
+        help=LINKS_KEYWORD_HELP,
     )
     group.addoption(
         Options.FAIL_ON_ALL_SKIPPED,
@@ -337,11 +365,14 @@ def _is_suitable_dir(name: str) -> bool:
 
 def mark_tests_by_location(session, config) -> None:
     try:
-        test_dir = next(iter(CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN))))
+        test_dir = next(
+            iter(CURDIR.listdir(fil=lambda x: x.check(dir=True) and x.fnmatch(CORRECT_TESTS_FOLDER_PATTERN)))
+        )
     except StopIteration:
         if config.option.staging_warnings:
             warnings.warn(
-                f"Could not find folder '{CORRECT_TESTS_FOLDER_PATTERN}' in '{CURDIR.strpath}'!", UserWarning,
+                f"Could not find folder '{CORRECT_TESTS_FOLDER_PATTERN}' in '{CURDIR.strpath}'!",
+                UserWarning,
             )
         return
 
@@ -362,7 +393,8 @@ def mark_tests_by_location(session, config) -> None:
             )
         if UNIT_TESTS_MARKER not in to_upper_case(staging_markers):
             warnings.warn(
-                f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.", UserWarning,
+                f"Does your project really contain no '{UNIT_TESTS_MARKER}' tests? Amazing.",
+                UserWarning,
             )
 
     for item in session.items:
@@ -426,7 +458,11 @@ def set_bdd_options(session, config) -> None:
             continue
         if config.option.bdd_titles:
             item.own_markers.append(
-                Mark(name="allure_display_name", args=(f"{item._obj.__scenario__.name}",), kwargs={},)
+                Mark(
+                    name="allure_display_name",
+                    args=(f"{item._obj.__scenario__.name}",),
+                    kwargs={},
+                )
             )
         if config.option.browse_url:
             links = get_issue_links(item, keyword)
