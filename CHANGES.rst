@@ -1,6 +1,13 @@
 Changelog
 ---------
 
+0.11.0
+~~~~~~
+
+* Removed options `--browse-url` and `--links-keyword` (transferred to Overhave framework)
+* Updated tests
+* Updated library dependencies
+
 0.10.0
 ~~~~~~
 
