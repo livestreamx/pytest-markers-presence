@@ -5,12 +5,12 @@ language: python
 
 matrix:
     include:
-      - python: 3.7
-        env: TOX_ENV=py37
       - python: 3.8
         env: TOX_ENV=py38
-      - python: 3.7
+      - python: 3.8
         env: TOX_ENV=flake8
+      - python: 3.9
+        env: TOX_ENV=py39
 
 install:
   - pip install -U -r requirements-dev.txt
