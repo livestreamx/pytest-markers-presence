@@ -14,7 +14,7 @@ from _pytest.main import wrap_session
 from _pytest.mark import Mark
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
-from pytest_bdd.feature import Scenario
+import pytest_bdd.feature
 
 
 class Options(str, enum.Enum):
@@ -129,7 +129,11 @@ def pytest_collection_modifyitems(session, config):
 
 
 def is_pytest_bdd_item(item) -> bool:
-    return hasattr(item, "_obj") and hasattr(item._obj, "__scenario__") and isinstance(item._obj.__scenario__, Scenario)
+    return (
+        hasattr(item, "_obj")
+        and hasattr(item._obj, "__scenario__")
+        and isinstance(item._obj.__scenario__, pytest_bdd.feature.Scenario)
+    )
 
 
 @pytest.hookimpl
