@@ -34,7 +34,6 @@ Features
     - lists
     - long strings.
 * Setting Allure titles for BDD tests based on 'Scenario' information
-* Task tracker URL specification for ticket links compiling
 * Collecting of task tracker tickets with specified keyword
 * Enable setting of fail exitcode when all session tests were skipped
 
@@ -59,11 +58,6 @@ Allure steps.
 The `--bdd-titles` option is compatible with simple pytest run loop and could be used for setting Allure titles for BDD
 tests based on 'Scenario' information.
 
-The `--browse-url=BROWSE_URL` option is compatible with simple pytest run loop and could be used for task tracker URL
-specification for ticket links compiling.
-The `--links-keyword=LINKS_KEYWORD` option just helps to collect task tracker tickets with specified keyword
-(default value is `Tracker links`).
-
 The `--bdd-format` option will not run your tests and it's also sensible for errors in the pytest
 collection step. If you are using as part of you CI process the recommended way is to run it after the default test run.
 
@@ -81,8 +75,6 @@ For example:
       - pytest --assert-steps
 
       - pytest --bdd-format
-
-      - pytest --browse-url=https://my-jira.com/browse --links-keyword="My links"
 
 
 Examples of 'pytest' run with provided options:
