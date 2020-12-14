@@ -29,6 +29,9 @@ class Options(str, enum.Enum):
     # skipped
     FAIL_ON_ALL_SKIPPED = "--all-skipped-fail"
 
+    def __str__(self):
+        return str(self.value)
+
 
 class ExitCodes(int, enum.Enum):
     SUCCESS = 0
