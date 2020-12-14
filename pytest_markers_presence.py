@@ -3,8 +3,7 @@ import enum
 import json
 import warnings
 from dataclasses import asdict, is_dataclass
-from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List
 
 import _pytest.config
 import _pytest.python
@@ -27,9 +26,6 @@ class Options(str, enum.Enum):
     BDD_FORMAT = "--bdd-format"
     # warnings enabling
     WARNINGS = "--staging-warnings"
-    # links
-    BROWSE_URL = "--browse-url"
-    LINKS_KEYWORD = "--links-keyword"
     # skipped
     FAIL_ON_ALL_SKIPPED = "--all-skipped-fail"
 
@@ -63,10 +59,6 @@ STAGING_WARNINGS_HELP = "Enable warnings for staging"
 
 ASSERTION_FAILED_MESSAGE = "Assertion failed"
 ALLURE_MAX_STRING_LENGTH = 25
-
-BROWSE_URL_HELP = "Specify your task tracker URL for attachment of found issue links"
-LINKS_KEYWORD_HELP = "Specify your issue keyword for links searching"
-LINKS_DEFAULT_KEYWORD = "Tracker links"
 
 FAIL_ON_ALL_SKIPPED_HELP = "Enable setting of fail exitcode when all session tests were skipped"
 FAIL_ON_ALL_SKIPPED_HEADLINE = "Changed exitcode to FAILED because all tests were skipped."
@@ -113,20 +105,6 @@ def pytest_addoption(parser):
         help=STAGING_WARNINGS_HELP,
     )
     group.addoption(
-        Options.BROWSE_URL.value,
-        action="store",
-        dest="browse_url",
-        default=None,
-        help=BROWSE_URL_HELP,
-    )
-    group.addoption(
-        Options.LINKS_KEYWORD.value,
-        action="store",
-        dest="links_keyword",
-        default=None,
-        help=LINKS_KEYWORD_HELP,
-    )
-    group.addoption(
         Options.FAIL_ON_ALL_SKIPPED,
         action="store_true",
         dest="all_skipped_fail",
@@ -146,21 +124,12 @@ def pytest_cmdline_main(config):
 def pytest_collection_modifyitems(session, config):
     if config.option.stage_markers:
         mark_tests_by_location(session, config)
-    if config.option.bdd_titles or config.option.browse_url:
+    if config.option.bdd_titles:
         set_bdd_options(session, config)
 
 
 def is_pytest_bdd_item(item) -> bool:
     return hasattr(item, "_obj") and hasattr(item._obj, "__scenario__") and isinstance(item._obj.__scenario__, Scenario)
-
-
-@pytest.hookimpl
-def pytest_runtest_teardown(item) -> None:
-    """ Hook for issue links attachment. """
-    browse_url = item.config.getoption("browse_url")
-    if browse_url and is_pytest_bdd_item(item) and hasattr(item._obj.__scenario__.feature, "links"):
-        for link in item._obj.__scenario__.feature.links:
-            allure.dynamic.link(url=f"{browse_url.rstrip('/')}/{link}", name=link)
 
 
 @pytest.hookimpl
@@ -334,16 +303,6 @@ class AllureComparison(BaseModel):
         ]
 
 
-def get_issue_links(item, keyword: str) -> Optional[List[str]]:
-    with Path(item._obj.__scenario__.feature.filename).open() as file:
-        for line in file:
-            if keyword not in line:
-                continue
-            links_part = line.split(keyword)[-1]
-            return [x.strip() for x in links_part.split(",")]
-    return None
-
-
 def get_not_marked_items(session):
     issues = Issues()
     for cls, func in get_items(session):
@@ -449,10 +408,6 @@ def is_parent_excluded(func):
 
 
 def set_bdd_options(session, config) -> None:
-    keyword = LINKS_DEFAULT_KEYWORD
-    if config.option.links_keyword:
-        keyword = config.option.links_keyword
-    keyword += ":"
     for item in session.items:
         if not is_pytest_bdd_item(item):
             continue
@@ -464,7 +419,3 @@ def set_bdd_options(session, config) -> None:
                     kwargs={},
                 )
             )
-        if config.option.browse_url:
-            links = get_issue_links(item, keyword)
-            if links:
-                setattr(item._obj.__scenario__.feature, "links", links)

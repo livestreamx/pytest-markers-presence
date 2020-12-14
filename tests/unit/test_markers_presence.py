@@ -7,10 +7,8 @@ from pytest_markers_presence import (
     BDD_FORMAT_HELP,
     BDD_MARKED_OK_HEADLINE,
     BDD_TITLES_HELP,
-    BROWSE_URL_HELP,
     CLASSES_OK_HEADLINE,
     FAIL_ON_ALL_SKIPPED_HELP,
-    LINKS_KEYWORD_HELP,
     NO_FEATURE_CLASSES_HEADLINE,
     NO_STORY_FUNCTIONS_HEADLINE,
     NOT_CLASSIFIED_FUNCTIONS_HEADLINE,
@@ -70,46 +68,6 @@ class TestMarkersPresencePositive:
         result = testdir.runpytest(Options.BDD_TITLES, "-v")
         assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
 
-    def test_empty_browse_url(self, testdir):
-        f"""Make sure that pytest does not accept '{Options.BROWSE_URL}' fixture"""
-        testdir.makepyfile(
-            """
-            assert True
-            """
-        )
-        result = testdir.runpytest(Options.BROWSE_URL, "-v")
-        assert result.ret == pytest.ExitCode.USAGE_ERROR
-
-    def test_gotten_browse_url(self, testdir):
-        f"""Make sure that pytest accepts '{Options.BROWSE_URL}' fixture"""
-        testdir.makepyfile(
-            """
-            assert True
-            """
-        )
-        result = testdir.runpytest(f"{Options.BROWSE_URL}=somelink", "-v")
-        assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
-
-    def test_empty_links_keyword(self, testdir):
-        f"""Make sure that pytest does not accept '{Options.LINKS_KEYWORD}' fixture"""
-        testdir.makepyfile(
-            """
-            assert True
-            """
-        )
-        result = testdir.runpytest(Options.LINKS_KEYWORD, "-v")
-        assert result.ret == pytest.ExitCode.USAGE_ERROR
-
-    def test_gotten_links_keyword(self, testdir):
-        f"""Make sure that pytest does not accept '{Options.LINKS_KEYWORD}' fixture"""
-        testdir.makepyfile(
-            """
-            assert True
-            """
-        )
-        result = testdir.runpytest(f"{Options.LINKS_KEYWORD}=keyword", "-v")
-        assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
-
     def test_empty_bdd_markers(self, testdir):
         f"""Make sure that pytest accepts '{Options.BDD_FORMAT}' fixture"""
 
@@ -156,10 +114,6 @@ class TestMarkersPresencePositive:
                 f"*{Options.BDD_TITLES}*{BDD_TITLES_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.BDD_FORMAT}*{BDD_FORMAT_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.WARNINGS}*{STAGING_WARNINGS_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
-                f"*{Options.BROWSE_URL}*",
-                f"*{BROWSE_URL_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
-                f"*{Options.LINKS_KEYWORD}*",
-                f"*{LINKS_KEYWORD_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.FAIL_ON_ALL_SKIPPED}*{FAIL_ON_ALL_SKIPPED_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
             ]
         )
