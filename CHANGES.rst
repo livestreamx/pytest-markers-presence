@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.11.1
+~~~~~~
+
+* Updated deps after `pytest_bdd` updates and fixed import
+
 0.11.0
 ~~~~~~
 
