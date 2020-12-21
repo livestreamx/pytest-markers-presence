@@ -60,7 +60,7 @@ setup(
         "pytest>=6.0",
         "allure-pytest>=2.8.19",
         "pydantic>=1.2",
-        "pytest-bdd>=4.0",
+        "pytest-bdd>=4.0.2",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",

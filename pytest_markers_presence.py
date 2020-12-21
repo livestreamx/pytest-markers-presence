@@ -14,7 +14,7 @@ from _pytest.main import wrap_session
 from _pytest.mark import Mark
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
-import pytest_bdd.feature
+import pytest_bdd.parser
 
 
 class Options(str, enum.Enum):
@@ -135,7 +135,7 @@ def is_pytest_bdd_item(item) -> bool:
     return (
         hasattr(item, "_obj")
         and hasattr(item._obj, "__scenario__")
-        and isinstance(item._obj.__scenario__, pytest_bdd.feature.Scenario)
+        and isinstance(item._obj.__scenario__, pytest_bdd.parser.Scenario)
     )
 
 
