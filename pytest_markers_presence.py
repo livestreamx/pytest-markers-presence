@@ -11,17 +11,14 @@ import allure
 import py
 import pytest
 from _pytest.main import wrap_session
-from _pytest.mark import Mark
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
-import pytest_bdd.parser
 
 
 class Options(str, enum.Enum):
     # decoration
     STAGING = "--staging"
     ASSERT_STEPS = "--assert-steps"
-    BDD_TITLES = "--bdd-titles"
     # linter
     BDD_FORMAT = "--bdd-format"
     # warnings enabling
@@ -56,7 +53,6 @@ BDD_MARKED_OK_HEADLINE = "Cool, every test class with its functions is marked wi
 
 STAGING_HELP = f"Stage project with markers based on directories names in '{CORRECT_TESTS_FOLDER_PATTERN}' folder"
 ASSERT_STEPS_HELP = "Represent assertion comparisons with Allure steps"
-BDD_TITLES_HELP = "Set Allure titles for BDD test scenarios"
 BDD_FORMAT_HELP = "Show not classified functions usage and items without Allure BDD tags"
 STAGING_WARNINGS_HELP = "Enable warnings for staging"
 
@@ -85,13 +81,6 @@ def pytest_addoption(parser):
         dest="assert_steps",
         default=False,
         help=ASSERT_STEPS_HELP,
-    )
-    group.addoption(
-        Options.BDD_TITLES,
-        action="store_true",
-        dest="bdd_titles",
-        default=False,
-        help=BDD_TITLES_HELP,
     )
     group.addoption(
         Options.BDD_FORMAT,
@@ -127,16 +116,6 @@ def pytest_cmdline_main(config):
 def pytest_collection_modifyitems(session, config):
     if config.option.stage_markers:
         mark_tests_by_location(session, config)
-    if config.option.bdd_titles:
-        set_bdd_options(session, config)
-
-
-def is_pytest_bdd_item(item) -> bool:
-    return (
-        hasattr(item, "_obj")
-        and hasattr(item._obj, "__scenario__")
-        and isinstance(item._obj.__scenario__, pytest_bdd.parser.Scenario)
-    )
 
 
 @pytest.hookimpl
@@ -412,17 +391,3 @@ def include_if_function_without_story(func, lst):
 def is_parent_excluded(func):
     parent = func.getparent(_pytest.python.Class)
     return parent and detect_excluded_markers(parent)
-
-
-def set_bdd_options(session, config) -> None:
-    for item in session.items:
-        if not is_pytest_bdd_item(item):
-            continue
-        if config.option.bdd_titles:
-            item.own_markers.append(
-                Mark(
-                    name="allure_display_name",
-                    args=(f"{item._obj.__scenario__.name}",),
-                    kwargs={},
-                )
-            )

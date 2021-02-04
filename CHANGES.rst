@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.12.0
+~~~~~~
+
+* Deleted `--bdd-title` option (transferred as feature into `Overhave framework`_)
+
 0.11.1
 ~~~~~~
 
@@ -134,3 +139,5 @@ Changelog
 ~~~~~
 
 * First release
+
+.. _`Overhave`: https://github.com/TinkoffCreditSystems/overhave
