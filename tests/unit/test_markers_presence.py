@@ -6,7 +6,6 @@ from pytest_markers_presence import (
     ASSERTION_FAILED_MESSAGE,
     BDD_FORMAT_HELP,
     BDD_MARKED_OK_HEADLINE,
-    BDD_TITLES_HELP,
     CLASSES_OK_HEADLINE,
     FAIL_ON_ALL_SKIPPED_HELP,
     NO_FEATURE_CLASSES_HEADLINE,
@@ -58,16 +57,6 @@ class TestMarkersPresencePositive:
         result = testdir.runpytest(Options.ASSERT_STEPS, "-v")
         assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
 
-    def test_empty_titles(self, testdir):
-        f"""Make sure that pytest accepts '{Options.BDD_TITLES}' fixture"""
-        testdir.makepyfile(
-            """
-            assert True
-            """
-        )
-        result = testdir.runpytest(Options.BDD_TITLES, "-v")
-        assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
-
     def test_empty_bdd_markers(self, testdir):
         f"""Make sure that pytest accepts '{Options.BDD_FORMAT}' fixture"""
 
@@ -111,7 +100,6 @@ class TestMarkersPresencePositive:
                 "Markers presence:*",
                 f"*{Options.STAGING}*{STAGING_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.ASSERT_STEPS}*{ASSERT_STEPS_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
-                f"*{Options.BDD_TITLES}*{BDD_TITLES_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.BDD_FORMAT}*{BDD_FORMAT_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.WARNINGS}*{STAGING_WARNINGS_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.FAIL_ON_ALL_SKIPPED}*{FAIL_ON_ALL_SKIPPED_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",

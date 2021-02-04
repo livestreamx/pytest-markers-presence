@@ -33,7 +33,6 @@ Features
     - dictionaries
     - lists
     - long strings.
-* Setting Allure titles for BDD tests based on 'Scenario' information
 * Collecting of task tracker tickets with specified keyword
 * Enable setting of fail exitcode when all session tests were skipped
 
@@ -55,9 +54,6 @@ The `--staging-warnings` option just enables warnings for `--staging` option.
 The `--assert-steps` option is compatible with simple pytest run loop and could be used for assertions rewriting with
 Allure steps.
 
-The `--bdd-titles` option is compatible with simple pytest run loop and could be used for setting Allure titles for BDD
-tests based on 'Scenario' information.
-
 The `--bdd-format` option will not run your tests and it's also sensible for errors in the pytest
 collection step. If you are using as part of you CI process the recommended way is to run it after the default test run.
 
@@ -70,7 +66,7 @@ For example:
     script:
       - pytest
 
-      - pytest --staging --bdd-titles --all-skipped-fail
+      - pytest --staging --all-skipped-fail
 
       - pytest --assert-steps
 
@@ -79,7 +75,7 @@ For example:
 
 Examples of 'pytest' run with provided options:
 
-    $ pytest tests --staging --assert-steps --bdd-titles
+    $ pytest tests --staging --assert-steps
 
     ======================= test session starts =======================
 
