@@ -17,6 +17,10 @@ pytest-markers-presence
 .. image:: https://ci.appveyor.com/api/projects/status/github/livestreamx/pytest-markers-presence?branch=master
     :target: https://ci.appveyor.com/project/livestreamx/pytest-markers-presence/branch/master
     :alt: See Build Status on AppVeyor
+    
+.. image:: https://img.shields.io/pypi/dm/pytest-markers-presence.svg
+    :target: https://pypi.org/project/pytest-markers-presence
+    :alt: Downloads per month
 
 A simple plugin for easy staging your Python3 project's structure of `PyTest`_ tests.
 Make the repository with your tests structured with `Allure`_ ideology.
