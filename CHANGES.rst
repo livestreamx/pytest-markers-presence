@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.13.0
+~~~~~~
+
+* Add `--feature-title` option
+
 0.12.0
 ~~~~~~
 
