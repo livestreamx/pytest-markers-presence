@@ -5,6 +5,8 @@ import warnings
 from dataclasses import asdict, is_dataclass
 from typing import Any, List
 
+from allure_pytest.utils import allure_title
+
 import _pytest.config
 import _pytest.python
 import allure
@@ -415,7 +417,7 @@ def include_if_function_without_story(func, lst):
 
 
 def include_if_function_without_title(func, lst):
-    if not [m for m in func.own_markers if is_allure_marker_with_label(m, ALLURE_TITLE_TAG)]:
+    if allure_title(func) is None:
         lst.append(func)
 
 
