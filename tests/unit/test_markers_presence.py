@@ -63,8 +63,8 @@ class TestMarkersPresencePositive:
     @pytest.mark.parametrize(
         ("option", "message"),
         [
-            pytest.param(Options.BDD_FORMAT, [f"{BDD_MARKED_OK_HEADLINE}"]),
-            pytest.param(Options.FEATURE_TITLE, [f"*{FEATURE_TITLE_MARKED_OK_HEADLINE}*"]),
+            pytest.param(Options.BDD_FORMAT, BDD_MARKED_OK_HEADLINE),
+            pytest.param(Options.FEATURE_TITLE, FEATURE_TITLE_MARKED_OK_HEADLINE),
         ],
     )
     def test_empty_linter_markers(self, testdir, option, message):
