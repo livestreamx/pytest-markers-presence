@@ -59,7 +59,7 @@ setup(
     install_requires=[
         "pytest>=6.0",
         "allure-pytest>=2.8.19",
-        "pydantic>=1.2",
+        "pydantic>=2.0",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",

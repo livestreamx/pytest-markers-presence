@@ -6,13 +6,16 @@ from pytest_markers_presence import (
     ASSERTION_FAILED_MESSAGE,
     BDD_FORMAT_HELP,
     BDD_MARKED_OK_HEADLINE,
+    FEATURE_TITLE_MARKED_OK_HEADLINE,
     CLASSES_OK_HEADLINE,
     FAIL_ON_ALL_SKIPPED_HELP,
     NO_FEATURE_CLASSES_HEADLINE,
     NO_STORY_FUNCTIONS_HEADLINE,
+    NO_TITLE_FUNCTIONS_HEADLINE,
     NOT_CLASSIFIED_FUNCTIONS_HEADLINE,
     STAGING_HELP,
     STAGING_WARNINGS_HELP,
+    FEATURE_TITLE_HELP,
     UNIT_TESTS_MARKER,
     ExitCodes,
     Options,
@@ -44,7 +47,7 @@ class TestMarkersPresencePositive:
         # run pytest with the following cmd args
         result = testdir.runpytest(Options.STAGING, "-v")
 
-        # make sure that that we get a '0' exit code for the testsuite
+        # make sure that we get a '0' exit code for the testsuite
         assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
 
     def test_empty_assertions(self, testdir):
@@ -57,8 +60,15 @@ class TestMarkersPresencePositive:
         result = testdir.runpytest(Options.ASSERT_STEPS, "-v")
         assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
 
-    def test_empty_bdd_markers(self, testdir):
-        f"""Make sure that pytest accepts '{Options.BDD_FORMAT}' fixture"""
+    @pytest.mark.parametrize(
+        ("option", "message"),
+        [
+            pytest.param(Options.BDD_FORMAT, BDD_MARKED_OK_HEADLINE),
+            pytest.param(Options.FEATURE_TITLE, FEATURE_TITLE_MARKED_OK_HEADLINE),
+        ],
+    )
+    def test_empty_linter_markers(self, testdir, option, message):
+        f"""Make sure that pytest accepts '{option}' fixture"""
 
         # create a temporary pytest test module
         testdir.makepyfile(
@@ -68,18 +78,18 @@ class TestMarkersPresencePositive:
         )
 
         # run pytest with the following cmd args
-        result = testdir.runpytest(Options.BDD_FORMAT, "-v")
+        result = testdir.runpytest(option, "-v")
 
         # fnmatch_lines does an assertion internally
         result.stdout.fnmatch_lines(
             [
                 f"*{CLASSES_OK_HEADLINE}*",
-                f"*{BDD_MARKED_OK_HEADLINE}*",
+                f"*{message}*",
                 "*no tests ran in *",
             ]
         )
 
-        # make sure that that we get a '0' exit code for the testsuite
+        # make sure that we get a '0' exit code for the testsuite
         assert result.ret == ExitCodes.SUCCESS
 
     def test_empty_fail_on_all_skipped(self, testdir):
@@ -101,12 +111,20 @@ class TestMarkersPresencePositive:
                 f"*{Options.STAGING}*{STAGING_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.ASSERT_STEPS}*{ASSERT_STEPS_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.BDD_FORMAT}*{BDD_FORMAT_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
+                f"*{Options.FEATURE_TITLE}*{FEATURE_TITLE_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.WARNINGS}*{STAGING_WARNINGS_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
                 f"*{Options.FAIL_ON_ALL_SKIPPED}*{FAIL_ON_ALL_SKIPPED_HELP[:_DEFAULT_HELP_CHECKING_LENGTH]}*",
             ]
         )
 
-    def test_fixture_not_affected(self, testdir):
+    @pytest.mark.parametrize(
+        ("option", "message"),
+        [
+            pytest.param(Options.BDD_FORMAT, BDD_MARKED_OK_HEADLINE),
+            pytest.param(Options.FEATURE_TITLE, FEATURE_TITLE_MARKED_OK_HEADLINE),
+        ],
+    )
+    def test_fixture_not_affected(self, testdir, option, message):
         testdir.makepyfile(
             """
             import pytest
@@ -115,11 +133,11 @@ class TestMarkersPresencePositive:
                 return True
             """
         )
-        result = testdir.runpytest(Options.BDD_FORMAT)
+        result = testdir.runpytest(option)
         result.stdout.fnmatch_lines(
             [
                 f"*{CLASSES_OK_HEADLINE}*",
-                f"*{BDD_MARKED_OK_HEADLINE}*",
+                f"*{message}*",
                 "*no tests ran in *",
             ]
         )
@@ -127,7 +145,14 @@ class TestMarkersPresencePositive:
 
     @pytest.mark.parametrize("framework", ["behave", "pytest_bdd"])
     @pytest.mark.parametrize("bdd_step", ["given", "when", "then"])
-    def test_bdd_step_not_affected(self, testdir, framework, bdd_step):
+    @pytest.mark.parametrize(
+        ("option", "message"),
+        [
+            pytest.param(Options.BDD_FORMAT, BDD_MARKED_OK_HEADLINE),
+            pytest.param(Options.FEATURE_TITLE, FEATURE_TITLE_MARKED_OK_HEADLINE),
+        ],
+    )
+    def test_bdd_step_not_affected(self, testdir, framework, bdd_step, option, message):
         testdir.makepyfile(
             """
             import pytest
@@ -139,11 +164,11 @@ class TestMarkersPresencePositive:
                 package=framework, step=bdd_step
             )
         )
-        result = testdir.runpytest(Options.BDD_FORMAT)
+        result = testdir.runpytest(option)
         result.stdout.fnmatch_lines(
             [
                 f"*{CLASSES_OK_HEADLINE}*",
-                f"*{BDD_MARKED_OK_HEADLINE}*",
+                f"*{message}*",
                 "*no tests ran in *",
             ]
         )
@@ -151,7 +176,14 @@ class TestMarkersPresencePositive:
 
 
 class TestMarkersPresenceNegative:
-    def test_bdd_markers_simple(self, testdir):
+    @pytest.mark.parametrize(
+        ("option", "message"),
+        [
+            pytest.param(Options.BDD_FORMAT, NO_STORY_FUNCTIONS_HEADLINE),
+            pytest.param(Options.FEATURE_TITLE, NO_TITLE_FUNCTIONS_HEADLINE),
+        ],
+    )
+    def test_linter_markers_simple(self, testdir, option, message):
         """Make sure that pytest fails session with our fixtures."""
 
         testdir.makepyfile(
@@ -161,19 +193,26 @@ class TestMarkersPresenceNegative:
                     assert True
             """
         )
-        result = testdir.runpytest(Options.BDD_FORMAT)
+        result = testdir.runpytest(option)
         result.stdout.fnmatch_lines(
             [
                 f"*{NO_FEATURE_CLASSES_HEADLINE}*",
                 "Test class*TestClass*",
-                f"*{NO_STORY_FUNCTIONS_HEADLINE}*",
+                f"*{message}*",
                 "Test function*test_case*",
                 "*no tests ran in *",
             ]
         )
         assert result.ret == ExitCodes.ERROR
 
-    def test_markers_without_class(self, testdir):
+    @pytest.mark.parametrize(
+        ("option", "message"),
+        [
+            pytest.param(Options.BDD_FORMAT, NO_STORY_FUNCTIONS_HEADLINE),
+            pytest.param(Options.FEATURE_TITLE, NO_TITLE_FUNCTIONS_HEADLINE),
+        ],
+    )
+    def test_markers_without_class(self, testdir, option, message):
         """Make sure that pytest fails session with our fixtures."""
 
         testdir.makepyfile(
@@ -182,11 +221,11 @@ class TestMarkersPresenceNegative:
                 assert True
             """
         )
-        result = testdir.runpytest(Options.BDD_FORMAT)
+        result = testdir.runpytest(option)
         result.stdout.fnmatch_lines(
             [
                 f"*{NOT_CLASSIFIED_FUNCTIONS_HEADLINE}*",
-                f"*{NO_STORY_FUNCTIONS_HEADLINE}*",
+                f"*{message}*",
                 "*test_case*",
                 "*no tests ran in *",
             ]

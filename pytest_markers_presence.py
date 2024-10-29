@@ -21,6 +21,7 @@ class Options(str, enum.Enum):
     ASSERT_STEPS = "--assert-steps"
     # linter
     BDD_FORMAT = "--bdd-format"
+    FEATURE_TITLE = "--feature-title"
     # warnings enabling
     WARNINGS = "--staging-warnings"
     # skipped
@@ -43,17 +44,21 @@ MIN_TESTS_SUBFOLDERS_NUM = 3
 BDD_CHECKING_EXCLUDED_MARKERS = ["BEHAVE", "BEHAVIOR", "BDD", "PRESENCE_IGNORE"]
 ALLURE_FEATURE_TAG = "feature"
 ALLURE_STORY_TAG = "story"
+ALLURE_TITLE_TAG = "title"
 
 NOT_CLASSIFIED_FUNCTIONS_HEADLINE = "You should create test class(es) for your test function(s):"
 CLASSES_OK_HEADLINE = "Cool, every function is classified."
 
 NO_FEATURE_CLASSES_HEADLINE = "You should set BDD tag '@allure.feature' for your test class(es):"
 NO_STORY_FUNCTIONS_HEADLINE = "You should set BDD tag '@allure.story' for your test function(s):"
+NO_TITLE_FUNCTIONS_HEADLINE = "You should set tag '@allure.title' for your test function(s):"
 BDD_MARKED_OK_HEADLINE = "Cool, every test class with its functions is marked with BDD tags."
+FEATURE_TITLE_MARKED_OK_HEADLINE = "Cool, every test class with its functions is marked with feature-title tags."
 
 STAGING_HELP = f"Stage project with markers based on directories names in '{CORRECT_TESTS_FOLDER_PATTERN}' folder"
 ASSERT_STEPS_HELP = "Represent assertion comparisons with Allure steps"
 BDD_FORMAT_HELP = "Show not classified functions usage and items without Allure BDD tags"
+FEATURE_TITLE_HELP = "Show not classified functions usage and items without '@allure.feature' and '@allure.title' tags"
 STAGING_WARNINGS_HELP = "Enable warnings for staging"
 
 ASSERTION_FAILED_MESSAGE = "Assertion failed"
@@ -90,6 +95,13 @@ def pytest_addoption(parser):
         help=BDD_FORMAT_HELP,
     )
     group.addoption(
+        Options.FEATURE_TITLE,
+        action="store_true",
+        dest="feature_title",
+        default=False,
+        help=FEATURE_TITLE_HELP,
+    )
+    group.addoption(
         Options.WARNINGS,
         action="store_true",
         dest="staging_warnings",
@@ -106,7 +118,7 @@ def pytest_addoption(parser):
 
 
 def pytest_cmdline_main(config):
-    if config.option.bdd_markers:
+    if config.option.bdd_markers or config.option.feature_title:
         config.option.verbose = -1
         if wrap_session(config, is_checking_failed):
             return ExitCodes.ERROR
@@ -162,10 +174,13 @@ def is_checking_failed(config, session):
     session.perform_collect()
     tw = _pytest.config.create_terminal_writer(config)
     tw.line()
-    issues = get_not_marked_items(session)
+    issues = get_not_marked_items(config, session)
     if not issues.are_exists():
         tw.line(CLASSES_OK_HEADLINE, green=True)
-        tw.line(BDD_MARKED_OK_HEADLINE, green=True)
+        if config.option.bdd_markers:
+            tw.line(BDD_MARKED_OK_HEADLINE, green=True)
+        if config.option.feature_title:
+            tw.line(FEATURE_TITLE_MARKED_OK_HEADLINE, green=True)
 
     if issues.not_classified_functions:
         tw.line(NOT_CLASSIFIED_FUNCTIONS_HEADLINE, red=True)
@@ -177,9 +192,14 @@ def is_checking_failed(config, session):
         write_classes(tw, issues.no_feature_classes)
         tw.line()
 
-    if issues.no_story_functions:
+    if config.option.bdd_markers and issues.no_story_functions:
         tw.line(NO_STORY_FUNCTIONS_HEADLINE, red=True)
         write_functions(tw, issues.no_story_functions)
+        tw.line()
+
+    if config.option.feature_title and issues.no_title_functions:
+        tw.line(NO_TITLE_FUNCTIONS_HEADLINE, red=True)
+        write_functions(tw, issues.no_title_functions)
 
     return issues.are_exists()
 
@@ -215,9 +235,12 @@ class Issues:
     not_classified_functions: List = []
     no_feature_classes: List = []
     no_story_functions: List = []
+    no_title_functions: List = []
 
     def are_exists(self):
-        return bool(self.not_classified_functions + self.no_feature_classes + self.no_story_functions)
+        return bool(
+            self.not_classified_functions + self.no_feature_classes + self.no_story_functions + self.no_title_functions
+        )
 
 
 @dataclass(frozen=True)
@@ -259,7 +282,7 @@ class AllureComparison(BaseModel):
     @classmethod
     def extract_recursively(cls, obj: Any) -> str:
         if isinstance(obj, BaseModel):
-            return obj.json(**JSON_DUMPS_KWARGS)
+            return cls.dump_to_json(obj.model_dump(mode="json"))
         elif is_dataclass(obj):
             return cls.extract_recursively({key: cls.extract_recursively(value) for key, value in asdict(obj).items()})
         elif isinstance(obj, (dict, list)):
@@ -289,14 +312,17 @@ class AllureComparison(BaseModel):
         ]
 
 
-def get_not_marked_items(session):
+def get_not_marked_items(config, session) -> Issues:
     issues = Issues()
     for cls, func in get_items(session):
         if cls and not detect_excluded_markers(cls):
             include_if_class_without_feature(cls, issues.no_feature_classes)
         if not detect_excluded_markers(func) and not is_parent_excluded(func):
             include_if_function_without_class(func, issues.not_classified_functions)
-            include_if_function_without_story(func, issues.no_story_functions)
+            if config.option.bdd_markers:
+                include_if_function_without_story(func, issues.no_story_functions)
+            if config.option.feature_title:
+                include_if_function_without_title(func, issues.no_title_functions)
     return issues
 
 
@@ -385,6 +411,11 @@ def include_if_class_without_feature(cls, lst):
 
 def include_if_function_without_story(func, lst):
     if not [m for m in func.own_markers if is_allure_marker_with_label(m, ALLURE_STORY_TAG)]:
+        lst.append(func)
+
+
+def include_if_function_without_title(func, lst):
+    if not [m for m in func.own_markers if is_allure_marker_with_label(m, ALLURE_TITLE_TAG)]:
         lst.append(func)
 
 

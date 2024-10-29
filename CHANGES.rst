@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+0.13.0
+~~~~~~
+
+* Added `--feature-title` option
+* Updated library dependencies
+
 0.12.0
 ~~~~~~
 
