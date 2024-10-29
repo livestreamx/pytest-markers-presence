@@ -58,7 +58,7 @@ The `--staging-warnings` option just enables warnings for `--staging` option.
 The `--assert-steps` option is compatible with simple pytest run loop and could be used for assertions rewriting with
 Allure steps.
 
-The `--bdd-format` option will not run your tests and it's also sensible for errors in the pytest
+The `--bdd-format` and `--feature-title` option will not run your tests and it's also sensible for errors in the pytest
 collection step. If you are using as part of you CI process the recommended way is to run it after the default test run.
 
 The `--all-skipped-fail` option is compatible is simple pytest run loop
