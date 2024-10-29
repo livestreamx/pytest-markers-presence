@@ -46,7 +46,6 @@ MIN_TESTS_SUBFOLDERS_NUM = 3
 BDD_CHECKING_EXCLUDED_MARKERS = ["BEHAVE", "BEHAVIOR", "BDD", "PRESENCE_IGNORE"]
 ALLURE_FEATURE_TAG = "feature"
 ALLURE_STORY_TAG = "story"
-ALLURE_TITLE_TAG = "title"
 
 NOT_CLASSIFIED_FUNCTIONS_HEADLINE = "You should create test class(es) for your test function(s):"
 CLASSES_OK_HEADLINE = "Cool, every function is classified."
