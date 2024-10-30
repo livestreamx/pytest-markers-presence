@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.13.1
+~~~~~~
+
+* Hotfix `--feature-title` option
+
 0.13.0
 ~~~~~~
 

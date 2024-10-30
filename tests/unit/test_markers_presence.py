@@ -92,6 +92,44 @@ class TestMarkersPresencePositive:
         # make sure that we get a '0' exit code for the testsuite
         assert result.ret == ExitCodes.SUCCESS
 
+    @pytest.mark.parametrize(
+        ("option", "message", "tag"),
+        [
+            pytest.param(Options.BDD_FORMAT, BDD_MARKED_OK_HEADLINE, "@allure.story('Story')"),
+            pytest.param(Options.FEATURE_TITLE, FEATURE_TITLE_MARKED_OK_HEADLINE, "@allure.title('Title')"),
+        ],
+    )
+    def test_success_linter_markers(self, testdir, option, message, tag):
+        f"""Make sure that pytest accepts '{option}' fixture"""
+
+        # create a temporary pytest test module
+        testdir.makepyfile(
+            f"""
+            import allure
+            
+            @allure.feature('Feature')
+            class TestFeature:
+                {tag}
+                def test_func(self):
+                    assert True
+            """
+        )
+
+        # run pytest with the following cmd args
+        result = testdir.runpytest(option, "-v")
+
+        # fnmatch_lines does an assertion internally
+        result.stdout.fnmatch_lines(
+            [
+                f"*{CLASSES_OK_HEADLINE}*",
+                f"*{message}*",
+                "*no tests ran in *",
+            ]
+        )
+
+        # make sure that we get a '0' exit code for the testsuite
+        assert result.ret == ExitCodes.SUCCESS
+
     def test_empty_fail_on_all_skipped(self, testdir):
         f"""Make sure that pytest accepts '{Options.FAIL_ON_ALL_SKIPPED}' fixture"""
         testdir.makepyfile(

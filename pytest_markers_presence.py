@@ -5,6 +5,8 @@ import warnings
 from dataclasses import asdict, is_dataclass
 from typing import Any, List
 
+from allure_pytest.utils import allure_title
+
 import _pytest.config
 import _pytest.python
 import allure
@@ -44,7 +46,6 @@ MIN_TESTS_SUBFOLDERS_NUM = 3
 BDD_CHECKING_EXCLUDED_MARKERS = ["BEHAVE", "BEHAVIOR", "BDD", "PRESENCE_IGNORE"]
 ALLURE_FEATURE_TAG = "feature"
 ALLURE_STORY_TAG = "story"
-ALLURE_TITLE_TAG = "title"
 
 NOT_CLASSIFIED_FUNCTIONS_HEADLINE = "You should create test class(es) for your test function(s):"
 CLASSES_OK_HEADLINE = "Cool, every function is classified."
@@ -415,7 +416,7 @@ def include_if_function_without_story(func, lst):
 
 
 def include_if_function_without_title(func, lst):
-    if not [m for m in func.own_markers if is_allure_marker_with_label(m, ALLURE_TITLE_TAG)]:
+    if allure_title(func) is None:
         lst.append(func)
 
 
